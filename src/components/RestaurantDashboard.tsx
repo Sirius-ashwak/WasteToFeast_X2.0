@@ -52,6 +52,10 @@ export default function RestaurantDashboard() {
       if (!demoProfiles.restaurant) {
         initializeDemoProfiles();
       }
+      // Initialize demo profiles if not already done
+      if (!demoProfiles.restaurant) {
+        initializeDemoProfiles();
+      }
     }
   }, [user, isRestaurantAdmin]);
 

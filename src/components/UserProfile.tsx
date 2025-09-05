@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, MapPin, Clock, CheckCircle, Phone, Mail, Calendar, Utensils, Award, TrendingUp } from 'lucide-react';
 import { ChefHat } from 'lucide-react';
+import { ChefHat } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { getUserClaims, markPickupCompleted, type ClaimWithDetails } from '../services/foodSharing';
 import { toast } from 'react-hot-toast';
