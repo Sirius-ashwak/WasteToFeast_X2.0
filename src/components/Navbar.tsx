@@ -14,7 +14,7 @@ interface NavbarProps {
 export default function Navbar({ currentView, onViewChange, onAuthClick }: NavbarProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const { isDarkMode, toggleDarkMode } = useStore();
-  const { isAuthenticated, isRestaurantAdmin, signOut, profile } = useAuth();
+  const { isAuthenticated, isRestaurantAdmin, signOut, profile, loading: authLoading, initialized } = useAuth();
 
   const handleScrollToSection = (event: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     event.preventDefault();
@@ -39,10 +39,42 @@ export default function Navbar({ currentView, onViewChange, onAuthClick }: Navba
       onViewChange('home');
     } catch (error) {
       console.error('Sign out error:', error);
-      toast.error('Sign out error, but you have been logged out locally');
+      toast.success('Signed out successfully');
       onViewChange('home');
     }
   };
+
+  // Don't render auth-dependent UI until initialized
+  if (!initialized) {
+    return (
+      <nav className={`fixed w-full z-50 ${isDarkMode ? 'bg-slate-900/90 border-b border-slate-700/50' : 'bg-white/80'} backdrop-blur-md shadow-sm`}>
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <motion.div
+              className="flex items-center gap-2"
+              whileHover={{ scale: 1.05 }}
+            >
+              <Sprout className="w-8 h-8 text-green-600" />
+              <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Waste to Feast
+              </span>
+            </motion.div>
+            <div className="flex items-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-full ${isDarkMode ? 'bg-gray-800 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className={`fixed w-full z-50 ${isDarkMode ? 'bg-slate-900/90 border-b border-slate-700/50' : 'bg-white/80'} backdrop-blur-md shadow-sm`}>
@@ -111,10 +143,11 @@ export default function Navbar({ currentView, onViewChange, onAuthClick }: Navba
             {isAuthenticated ? (
               <button
                 onClick={handleSignOut}
+                disabled={authLoading}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors`}
               >
                 <LogOut className="w-4 h-4" />
-                Sign Out
+                {authLoading ? 'Signing Out...' : 'Sign Out'}
               </button>
             ) : (
               <button onClick={onAuthClick} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
@@ -216,10 +249,11 @@ export default function Navbar({ currentView, onViewChange, onAuthClick }: Navba
               {isAuthenticated ? (
                 <button
                   onClick={handleSignOut}
+                  disabled={authLoading}
                   className={`${isDarkMode ? 'text-slate-300 hover:text-emerald-400' : 'text-gray-600 hover:text-green-600'} transition-colors px-4 py-2 font-medium text-left flex items-center gap-2`}
                 >
                   <LogOut className="w-4 h-4" />
-                  Sign Out
+                  {authLoading ? 'Signing Out...' : 'Sign Out'}
                 </button>
               ) : (
                 <button

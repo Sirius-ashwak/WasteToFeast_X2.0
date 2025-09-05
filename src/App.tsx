@@ -18,7 +18,7 @@ import { toast } from 'react-hot-toast';
 
 function App() {
   const { isDarkMode, setCurrentAnalysis, initializeSampleData, mealHistory } = useStore();
-  const { isAuthenticated, isRestaurantAdmin, loading: authLoading, user } = useAuth();
+  const { isAuthenticated, isRestaurantAdmin, loading: authLoading, user, initialized } = useAuth();
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'restaurant' | 'profile'>('home');
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -66,7 +66,7 @@ function App() {
   };
 
   const handleViewChange = (view: 'home' | 'restaurant' | 'profile') => {
-    if (!isAuthenticated && !authLoading) {
+    if (!isAuthenticated && initialized) {
       setShowAuthModal(true);
       return;
     }
@@ -82,14 +82,14 @@ function App() {
 
   // Set default view based on user role after authentication
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
+    if (isAuthenticated && initialized) {
       // Only auto-navigate if we're on home and user just logged in
       if (currentView === 'home' && user) {
         // Don't auto-navigate, let user stay on home page
         // They can manually navigate to their profile/restaurant dashboard
       }
     }
-  }, [isAuthenticated, isRestaurantAdmin, authLoading, currentView, user]);
+  }, [isAuthenticated, isRestaurantAdmin, initialized, currentView, user]);
 
   // Handle successful authentication
   const handleAuthSuccess = () => {
@@ -97,6 +97,26 @@ function App() {
     toast.success('Successfully signed in!');
     // Don't auto-navigate, let user stay where they are
   };
+
+  // Show loading screen while initializing
+  if (!initialized) {
+    return (
+      <div className={`min-h-screen transition-colors duration-200 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white' 
+          : 'bg-gradient-to-b from-green-50 to-white'
+      }`}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-300 text-lg">
+              Initializing Waste to Feast...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const renderCurrentView = () => {
     switch (currentView) {

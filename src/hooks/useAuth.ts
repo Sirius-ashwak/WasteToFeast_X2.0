@@ -11,40 +11,87 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setLoading(false);
+    let mounted = true;
+    
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          setInitialized(true);
+          return;
+        }
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
+        
+        setInitialized(true);
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          setInitialized(true);
+        }
       }
-    });
+    };
+    
+    initializeAuth();
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setLoading(true);
+      if (!mounted) return;
+      
+      console.log('Auth state change:', event, session?.user?.id);
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        setLoading(true);
         await fetchUserProfile(session.user.id);
       } else {
         setProfile(null);
-        setProfileLoading(false);
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
+    if (!userId) {
+      setProfile(null);
+      setProfileLoading(false);
+      setLoading(false);
+      return;
+    }
+    
     try {
       setProfileLoading(true);
       const { data, error } = await supabase
@@ -54,15 +101,19 @@ export function useAuth() {
         .single();
 
       if (error) {
+        console.error('Profile fetch error:', error);
         if (error.code === 'PGRST116') {
+          // No profile found - this is normal for new users
           setProfile(null);
         } else {
+          console.error('Unexpected profile error:', error);
           setProfile(null);
         }
       } else {
         setProfile(data);
       }
     } catch (error) {
+      console.error('Profile fetch exception:', error);
       setProfile(null);
     } finally {
       setProfileLoading(false);
@@ -76,6 +127,8 @@ export function useAuth() {
     role?: 'user' | 'restaurant_admin';
     phone?: string;
   }) => {
+    setLoading(true);
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -107,6 +160,8 @@ export function useAuth() {
   };
 
   const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -117,19 +172,17 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
-        // Don't throw error, just log it and continue with local cleanup
       }
     } catch (error) {
       console.error('Sign out error:', error);
-      // Don't throw error, continue with cleanup
     }
     
-    // Always clear local state regardless of API response
+    // Always clear local state
     setUser(null);
     setProfile(null);
     setSession(null);
@@ -157,6 +210,7 @@ export function useAuth() {
     session,
     loading,
     profileLoading,
+    initialized,
     signUp,
     signIn,
     signOut,

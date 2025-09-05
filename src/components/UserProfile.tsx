@@ -9,7 +9,7 @@ import { toast } from 'react-hot-toast';
 import { useStore } from '../store';
 
 export default function UserProfile() {
-  const { user, profile, updateProfile, loading: authLoading, profileLoading, isRestaurantAdmin } = useAuth();
+  const { user, profile, updateProfile, loading: authLoading, profileLoading, isRestaurantAdmin, initialized } = useAuth();
   const { demoProfiles, initializeDemoProfiles } = useStore();
   const [claims, setClaims] = useState<ClaimWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,15 +125,15 @@ export default function UserProfile() {
   const displayProfile = profile || (user ? demoProfiles.user : null);
   const isDemo = !profile && !!demoProfiles.user;
 
-  // Show loading if auth is loading or profile is loading or claims are loading
-  if (authLoading || profileLoading || (loading && user)) {
+  // Show loading if not initialized or still loading
+  if (!initialized || authLoading || profileLoading || (loading && user)) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-300">
-              {authLoading ? 'Loading account...' : profileLoading ? 'Loading profile...' : 'Loading claims...'}
+              {!initialized ? 'Initializing...' : authLoading ? 'Loading account...' : profileLoading ? 'Loading profile...' : 'Loading claims...'}
             </p>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function UserProfile() {
     );
   }
 
-  // If not authenticated, show message
+  // If not authenticated and initialized, show sign-in message
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto p-6">
