@@ -112,6 +112,9 @@ function App() {
             <p className="text-gray-600 dark:text-gray-300 text-lg">
               Initializing Waste to Feast...
             </p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+              If this takes too long, please refresh the page
+            </p>
           </div>
         </div>
       </div>

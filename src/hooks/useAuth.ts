@@ -18,6 +18,7 @@ export function useAuth() {
     
     const initializeAuth = async () => {
       try {
+        console.log('Starting auth initialization...');
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -33,6 +34,7 @@ export function useAuth() {
           return;
         }
         
+        console.log('Session retrieved:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -43,6 +45,7 @@ export function useAuth() {
           setLoading(false);
         }
         
+        console.log('Auth initialization complete');
         setInitialized(true);
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -55,6 +58,15 @@ export function useAuth() {
         }
       }
     };
+    
+    // Add a timeout to ensure initialization completes
+    const initTimeout = setTimeout(() => {
+      if (!initialized) {
+        console.warn('Auth initialization timeout - forcing completion');
+        setLoading(false);
+        setInitialized(true);
+      }
+    }, 5000);
     
     initializeAuth();
 
@@ -80,6 +92,7 @@ export function useAuth() {
 
     return () => {
       mounted = false;
+      clearTimeout(initTimeout);
       subscription.unsubscribe();
     };
   }, []);
