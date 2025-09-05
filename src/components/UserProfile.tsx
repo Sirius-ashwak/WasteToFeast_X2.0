@@ -252,28 +252,35 @@ export default function UserProfile() {
         {/* Claims History */}
         <div className="lg:col-span-2">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold dark:text-white mb-6">My Food Claims</h3>
+            <h3 className="text-xl font-semibold dark:text-white mb-6">
+              {isRestaurantAdmin ? 'Community Impact' : 'My Food Claims'}
+            </h3>
             
             {claims.length === 0 ? (
               <div className="text-center py-12">
                 <Utensils className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  No claims yet
+                  {isRestaurantAdmin ? 'No community activity yet' : 'No claims yet'}
                 </h4>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Start rescuing food from local restaurants to see your activity here
+                  {isRestaurantAdmin 
+                    ? 'Start posting food listings to help your community and see your impact here'
+                    : 'Start rescuing food from local restaurants to see your activity here'
+                  }
                 </p>
-                <button
-                  onClick={() => {
-                    const foodSharingSection = document.getElementById('food-sharing');
-                    if (foodSharingSection) {
-                      foodSharingSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
-                >
-                  Find Food to Rescue
-                </button>
+                {!isRestaurantAdmin && (
+                  <button
+                    onClick={() => {
+                      const foodSharingSection = document.getElementById('food-sharing');
+                      if (foodSharingSection) {
+                        foodSharingSection.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  >
+                    Find Food to Rescue
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
