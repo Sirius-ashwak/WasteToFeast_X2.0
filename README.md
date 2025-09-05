@@ -30,6 +30,15 @@ npm run preview
 The application requires the following environment variables:
 
 - `VITE_GEMINI_API_KEY`: API key for Google's Gemini AI (for image analysis and recipe generation)
+- `VITE_SUPABASE_URL`: Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+### Setting up Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to Settings > API to get your project URL and anon key
+3. Run the migration file in the Supabase SQL Editor to set up the database schema
+4. Add the environment variables to your `.env` file
 
 ## Deployment
 

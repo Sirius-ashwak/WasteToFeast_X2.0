@@ -17,6 +17,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.2.1",
     "@heroicons/react": "^2.2.0",
+    "@supabase/supabase-js": "^2.57.0",
     "@tailwindcss/typography": "^0.5.16",
     "framer-motion": "^11.18.2",
     "lucide-react": "^0.344.0",

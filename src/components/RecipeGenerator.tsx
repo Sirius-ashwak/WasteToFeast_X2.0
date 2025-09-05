@@ -683,7 +683,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                 <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
                   Show raw recipe text
                 </summary>
-                <div className="mt-2 bg-gray-50 p-4 rounded-lg dark:bg-slate-700/50 dark:border dark:border-slate-600 overflow-auto max-h-[300px] transition-colors duration-200"
+                <div className="mt-2 bg-gray-50 p-4 rounded-lg dark:bg-slate-700/50 dark:border dark:border-slate-600 overflow-auto max-h-[300px] transition-colors duration-200">
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">{recipe}</pre>
                 </div>
               </details>
