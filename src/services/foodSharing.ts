@@ -193,7 +193,16 @@ export async function getUserClaims(userId: string) {
     .eq('user_id', userId)
     .order('claimed_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error fetching user claims:', error);
+    throw error;
+  }
+  
+  // Return empty array if no data
+  if (!data) {
+    return [];
+  }
+  
   return data as ClaimWithDetails[];
 }
 

@@ -18,7 +18,7 @@ import { toast } from 'react-hot-toast';
 
 function App() {
   const { isDarkMode, setCurrentAnalysis } = useStore();
-  const { isAuthenticated, isRestaurantAdmin } = useAuth();
+  const { isAuthenticated, isRestaurantAdmin, loading: authLoading } = useAuth();
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'restaurant' | 'profile'>('home');
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -44,7 +44,7 @@ function App() {
   };
 
   const handleViewChange = (view: 'home' | 'restaurant' | 'profile') => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !authLoading) {
       setShowAuthModal(true);
       return;
     }
@@ -60,14 +60,14 @@ function App() {
 
   // Set default view based on user role after authentication
   useEffect(() => {
-    if (isAuthenticated && currentView === 'home') {
+    if (isAuthenticated && !authLoading && currentView === 'home') {
       if (isRestaurantAdmin) {
         setCurrentView('restaurant');
       } else {
         setCurrentView('profile');
       }
     }
-  }, [isAuthenticated, isRestaurantAdmin]);
+  }, [isAuthenticated, isRestaurantAdmin, authLoading, currentView]);
 
   const renderCurrentView = () => {
     switch (currentView) {
