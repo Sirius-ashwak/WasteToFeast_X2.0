@@ -10,10 +10,12 @@ export function useAuth() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -28,6 +30,7 @@ export function useAuth() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session?.user?.id);
+      setLoading(true);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -35,6 +38,7 @@ export function useAuth() {
         await fetchUserProfile(session.user.id);
       } else {
         setProfile(null);
+        setProfileLoading(false);
         setLoading(false);
       }
     });
@@ -44,6 +48,7 @@ export function useAuth() {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      setProfileLoading(true);
       console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('users')
@@ -51,15 +56,23 @@ export function useAuth() {
         .eq('id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', error);
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('No profile found for user, this is normal for new users');
+          setProfile(null);
+        } else {
+          console.error('Error fetching user profile:', error);
+          setProfile(null);
+        }
       } else {
         console.log('User profile loaded:', data);
         setProfile(data);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      setProfile(null);
     } finally {
+      setProfileLoading(false);
       setLoading(false);
     }
   };
@@ -111,8 +124,25 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      console.log('Signing out...');
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
+      }
+      console.log('Sign out successful');
+      // Clear local state
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+    } catch (error) {
+      console.error('Sign out failed:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
@@ -135,6 +165,7 @@ export function useAuth() {
     profile,
     session,
     loading,
+    profileLoading,
     signUp,
     signIn,
     signOut,

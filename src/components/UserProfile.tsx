@@ -6,7 +6,7 @@ import { getUserClaims, markPickupCompleted, type ClaimWithDetails } from '../se
 import { toast } from 'react-hot-toast';
 
 export default function UserProfile() {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, loading: authLoading, profileLoading } = useAuth();
   const [claims, setClaims] = useState<ClaimWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
@@ -18,6 +18,8 @@ export default function UserProfile() {
   useEffect(() => {
     if (user) {
       loadUserClaims();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
@@ -39,7 +41,11 @@ export default function UserProfile() {
       setClaims(data);
     } catch (error) {
       console.error('Error loading claims:', error);
-      toast.error('Failed to load your claims');
+      // Don't show error toast for empty claims, it's normal
+      if (error instanceof Error && !error.message.includes('0 rows')) {
+        toast.error('Failed to load your claims');
+      }
+      setClaims([]);
     } finally {
       setLoading(false);
     }
@@ -100,16 +106,38 @@ export default function UserProfile() {
   const totalMealsRescued = claims.length;
   const completionRate = claims.length > 0 ? Math.round((completedClaims.length / claims.length) * 100) : 0;
 
-  if (loading) {
+  // Show loading if auth is loading or profile is loading or claims are loading
+  if (authLoading || profileLoading || (loading && user)) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-300">
+              {authLoading ? 'Loading account...' : profileLoading ? 'Loading profile...' : 'Loading claims...'}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
+  // If not authenticated, show message
+  if (!user) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="text-center py-12">
+          <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Please Sign In
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            You need to be signed in to view your profile.
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
