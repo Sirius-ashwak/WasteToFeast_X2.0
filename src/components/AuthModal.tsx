@@ -47,6 +47,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onSuc
       setLoading(false);
     }
   }, [isOpen]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -59,6 +60,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onSuc
 
     try {
       await signIn(loginForm.email, loginForm.password);
+      toast.success('Successfully signed in!');
       onSuccess?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');
@@ -88,12 +90,6 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onSuc
     setLoading(true);
 
     try {
-      console.log('Starting signup with form data:', {
-        email: signupForm.email,
-        username: signupForm.username,
-        role: signupForm.role
-      });
-      
       await signUp(signupForm.email, signupForm.password, {
         username: signupForm.username,
         full_name: signupForm.full_name || undefined,
@@ -101,15 +97,11 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onSuc
         phone: signupForm.phone || undefined,
       });
       
-      console.log('Signup completed successfully');
       toast.success('Account created successfully!');
       onSuccess?.();
     } catch (error) {
-      console.error('Signup form error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Signup failed';
       toast.error(errorMessage);
-      
-      // Don't close modal on error, let user try again
     } finally {
       setLoading(false);
     }

@@ -140,77 +140,55 @@ export function useAuth() {
     role?: 'user' | 'restaurant_admin';
     phone?: string;
   }) => {
-    try {
-      console.log('Starting signup process...');
-    
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-      if (error) {
-        console.error('Signup error:', error);
-        if (error.message === 'User already registered') {
-          throw new Error('An account with this email already exists. Please sign in instead or use a different email address.');
-        }
-        throw error;
+    if (error) {
+      if (error.message === 'User already registered') {
+        throw new Error('An account with this email already exists. Please sign in instead or use a different email address.');
       }
-
-      console.log('Signup successful, creating profile...');
-
-      if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: data.user.id,
-            username: userData.username,
-            full_name: userData.full_name || null,
-            role: userData.role || 'user',
-            phone: userData.phone || null,
-          });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          if (profileError.code === '23505') {
-            throw new Error('Username is already taken. Please choose a different one.');
-          }
-          throw profileError;
-        }
-        console.log('Profile created successfully');
-        
-        // Fetch the created profile immediately
-        await fetchUserProfile(data.user.id);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Signup process error:', error);
       throw error;
     }
+
+    if (data.user) {
+      // Create user profile
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user.id,
+          username: userData.username,
+          full_name: userData.full_name || null,
+          role: userData.role || 'user',
+          phone: userData.phone || null,
+        });
+
+      if (profileError) {
+        if (profileError.code === '23505') {
+          throw new Error('Username is already taken. Please choose a different one.');
+        }
+        throw profileError;
+      }
+    }
+
+    return data;
   };
 
   const signIn = async (email: string, password: string) => {
-    setLoading(true);
-    
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) {
-        if (error.message === 'Invalid login credentials') {
-          throw new Error('Invalid email or password. Please check your credentials and try again.');
-        }
-        throw error;
+    if (error) {
+      if (error.message === 'Invalid login credentials') {
+        throw new Error('Invalid email or password. Please check your credentials and try again.');
       }
-      return data;
-    } catch (error) {
       throw error;
-    } finally {
-      setLoading(false);
     }
+    
+    return data;
   };
 
   const signOut = async () => {
