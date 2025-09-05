@@ -40,6 +40,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             <NavLink href="#features">Features</NavLink>
             <NavLink href="#recipes">Recipes</NavLink>
+            <NavLink href="#food-sharing">Food Sharing</NavLink>
             <NavLink href="#dashboard">Dashboard</NavLink>
             <NavLink href="#about">About</NavLink>
             <motion.button
@@ -91,6 +92,9 @@ export default function Navbar() {
               </MobileNavLink>
               <MobileNavLink href="#recipes" onClick={() => setIsOpen(false)}>
                 Recipes
+              </MobileNavLink>
+              <MobileNavLink href="#food-sharing" onClick={() => setIsOpen(false)}>
+                Food Sharing
               </MobileNavLink>
               <MobileNavLink href="#dashboard" onClick={() => setIsOpen(false)}>
                 Dashboard

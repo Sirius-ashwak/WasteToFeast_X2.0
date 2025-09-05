@@ -4,6 +4,7 @@ import Hero from './components/Hero';
 import ImageUploader from './components/ImageUploader';
 import RecipeGenerator from './components/RecipeGenerator';
 import Dashboard from './components/Dashboard';
+import FoodSharingSection from './components/FoodSharingSection';
 import Footer from './components/Footer';
 import { useStore } from './store';
 import { Toaster } from 'react-hot-toast';
@@ -81,6 +82,10 @@ function App() {
             
             <div id="dashboard">
               <Dashboard />
+            </div>
+            
+            <div id="food-sharing" className="mt-16">
+              <FoodSharingSection />
             </div>
             
             <div id="about" className="py-16 w-full max-w-7xl mx-auto">

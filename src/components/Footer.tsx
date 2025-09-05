@@ -59,6 +59,15 @@ export default function Footer() {
               </li>
               <li>
                 <a 
+                  href="#food-sharing" 
+                  onClick={(e) => handleScrollToSection(e, 'food-sharing')}
+                  className={`${isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'}`}
+                >
+                  Food Sharing
+                </a>
+              </li>
+              <li>
+                <a 
                   href="#dashboard" 
                   onClick={(e) => handleScrollToSection(e, 'dashboard')}
                   className={`${isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'}`}
