@@ -17,7 +17,7 @@ import type { AIAnalysisResult } from './types';
 import { toast } from 'react-hot-toast';
 
 function App() {
-  const { isDarkMode, setCurrentAnalysis } = useStore();
+  const { isDarkMode, setCurrentAnalysis, initializeSampleData, mealHistory } = useStore();
   const { isAuthenticated, isRestaurantAdmin, loading: authLoading, user } = useAuth();
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'restaurant' | 'profile'>('home');
@@ -40,6 +40,11 @@ function App() {
         duration: 5000,
         id: 'supabase-missing'
       });
+    }
+    
+    // Initialize sample data if no meal history exists
+    if (mealHistory.length === 0) {
+      initializeSampleData();
     }
   }, []);
 
