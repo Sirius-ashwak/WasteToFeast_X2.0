@@ -18,7 +18,7 @@ Icon.Default.mergeOptions({
 
 // Custom icons for different types of food
 const createCustomIcon = (color: string) => new Icon({
-  iconUrl: `data:image/svg+xml;base64,${btoa(`
+  iconUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
     <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
       <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 12.5 12.5 28.5 12.5 28.5s12.5-16 12.5-28.5C25 5.6 19.4 0 12.5 0z" fill="${color}"/>
       <circle cx="12.5" cy="12.5" r="7" fill="white"/>
@@ -175,7 +175,7 @@ export default function FoodMap({ className = '' }: FoodMapProps) {
             <Marker 
               position={userLocation}
               icon={new Icon({
-                iconUrl: `data:image/svg+xml;base64,${btoa(`
+                iconUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
                   <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="10" cy="10" r="8" fill="#3b82f6" stroke="white" stroke-width="2"/>
                     <circle cx="10" cy="10" r="3" fill="white"/>
