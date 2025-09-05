@@ -53,7 +53,7 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
         <div className="space-y-6">
           {/* Upload area */}
           <label className="block w-full cursor-pointer">
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+            <div className="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors duration-200">
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4 dark:text-gray-300" />
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 Drop your food image here, or click to browse
@@ -111,7 +111,7 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Preview Image */}
             <div className="bg-gray-100 rounded-lg p-4 dark:bg-gray-700 transition-colors duration-200">
-              <h4 className="font-medium mb-2 text-gray-700 dark:text-slate-200">Analyzed Image</h4>
+              <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-300">Analyzed Image</h4>
               {preview && (
                 <img
                   src={preview}
@@ -163,7 +163,7 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
                   toast.success('Ingredients added to recipe generator!');
                 }
               }}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center justify-center gap-2 transition-colors dark:bg-emerald-600 dark:hover:bg-emerald-700"
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center justify-center gap-2 transition-colors dark:bg-green-700 dark:hover:bg-green-800"
             >
               <ArrowRight className="w-4 h-4" />
               Use Ingredients
