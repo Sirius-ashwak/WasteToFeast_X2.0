@@ -39,6 +39,12 @@ export default function Hero() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              const featuresSection = document.getElementById('features');
+              if (featuresSection) {
+                featuresSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
             className="bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold 
                      shadow-lg hover:bg-green-700 transition-colors duration-200"
           >

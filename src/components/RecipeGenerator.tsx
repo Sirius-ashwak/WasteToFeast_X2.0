@@ -338,7 +338,11 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                     </p>
 
                     <button
-                      onClick={() => handleGenerateRecipe(suggestion)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleGenerateRecipe(suggestion);
+                      }}
                       disabled={loading && generatingFor === suggestion}
                       className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800"
                     >
@@ -391,7 +395,11 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
               ))}
             </div>
               <button
-                onClick={handleSaveRecipe}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSaveRecipe();
+                }}
                 className="ml-4 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm"
               >
                 <Save className="w-4 h-4" />
@@ -403,7 +411,10 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
 
           {/* Generate Button */}
         <button
-            onClick={() => handleGenerateRecipe()}
+            onClick={(e) => {
+              e.preventDefault();
+              handleGenerateRecipe();
+            }}
             disabled={loading || selectedIngredients.length === 0}
           className="w-full mb-4 px-6 py-3 bg-green-500 text-white rounded-lg 
                   hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed
@@ -437,7 +448,11 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
           )}
 
           {/* Styled Recipe Display */}
-          {parsedRecipe && (
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.preventDefault();
+                e.stopPropagation();
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

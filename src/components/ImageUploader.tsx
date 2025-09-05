@@ -53,7 +53,7 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
         <div className="space-y-6">
           {/* Upload area */}
           <label className="block w-full cursor-pointer">
-            <div className={`border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200`}>
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4 dark:text-gray-300" />
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 Drop your food image here, or click to browse
