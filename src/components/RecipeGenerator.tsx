@@ -309,29 +309,29 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
         {/* Recipe Suggestions Section */}
         <div className="bg-white rounded-lg shadow-md p-5 dark:bg-gray-800 dark:border dark:border-gray-700 w-full transition-colors duration-200">
           <h2 className="text-2xl font-bold mb-5 dark:text-gray-100">
-        Recipe Suggestions
-      </h2>
+            Recipe Suggestions
+          </h2>
 
           {currentAnalysis.suggestions && currentAnalysis.suggestions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentAnalysis.suggestions.map((suggestion, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
                   className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow dark:bg-gray-700 dark:border-gray-600 transition-colors duration-200"
                 >
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <ChefHat className="w-5 h-5 text-green-600 dark:text-green-400" />
                       <h3 className="text-lg font-semibold dark:text-white">{suggestion}</h3>
-              </div>
+                    </div>
 
                     <div className="flex items-center gap-2 text-gray-600 mb-4 dark:text-gray-300">
-                <Clock className="w-4 h-4" />
+                      <Clock className="w-4 h-4" />
                       <span>~30 mins</span>
-              </div>
+                    </div>
 
                     <p className="text-gray-600 mb-4 text-sm dark:text-gray-300">
                       A delicious dish using {selectedIngredients.length} selected ingredients.
@@ -354,71 +354,71 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                       ) : (
                         <>
                           Generate Recipe
-                <ArrowRight className="w-4 h-4" />
+                          <ArrowRight className="w-4 h-4" />
                         </>
                       )}
                     </button>
-            </div>
-          </motion.div>
-        ))}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           ) : (
             <p className="text-gray-500 dark:text-gray-400">
               No recipe suggestions available. Try uploading a different image.
             </p>
           )}
-      </div>
-
-        {/* Custom Recipe Generator Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-          className="bg-white rounded-lg shadow-md p-5 dark:bg-gray-800 dark:border dark:border-gray-700 w-full transition-colors duration-200"
-      >
-        <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold dark:text-white">Custom Recipe Generator</h2>
-          
-          {/* Star Rating */}
-          {recipe && (
-            <div className="flex items-center space-x-2">
-              <div className="flex space-x-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => handleRating(star)}
-                  className={`focus:outline-none ${
-                    star <= rating ? 'text-yellow-400' : 'text-gray-300'
-                  }`}
-                >
-                  <StarIcon className="h-6 w-6" />
-                </button>
-              ))}
-            </div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleSaveRecipe();
-                }}
-                className="ml-4 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm"
-              >
-                <Save className="w-4 h-4" />
-                Save Recipe
-              </button>
-            </div>
-          )}
         </div>
 
+        {/* Custom Recipe Generator Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-white rounded-lg shadow-md p-5 dark:bg-gray-800 dark:border dark:border-gray-700 w-full transition-colors duration-200"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold dark:text-white">Custom Recipe Generator</h2>
+          
+            {/* Star Rating */}
+            {recipe && (
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => handleRating(star)}
+                      className={`focus:outline-none ${
+                        star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                      }`}
+                    >
+                      <StarIcon className="h-6 w-6" />
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSaveRecipe();
+                  }}
+                  className="ml-4 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm"
+                >
+                  <Save className="w-4 h-4" />
+                  Save Recipe
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Generate Button */}
-        <button
+          <button
             onClick={(e) => {
               e.preventDefault();
               handleGenerateRecipe();
             }}
             disabled={loading || selectedIngredients.length === 0}
-          className="w-full mb-4 px-6 py-3 bg-green-500 text-white rounded-lg 
-                  hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed
-                    transition-colors duration-200 font-semibold text-lg flex items-center justify-center gap-2"
+            className="w-full mb-4 px-6 py-3 bg-green-500 text-white rounded-lg 
+                    hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed
+                      transition-colors duration-200 font-semibold text-lg flex items-center justify-center gap-2"
           >
             {loading && !generatingFor ? (
               <>
@@ -428,12 +428,12 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
             ) : (
               'Generate Custom Recipe with Selected Ingredients'
             )}
-        </button>
+          </button>
 
-        {/* Ingredients List */}
+          {/* Ingredients List */}
           {selectedIngredients.length > 0 && (
             <div className="mb-6">
-            <h3 className="font-semibold text-lg dark:text-white">Selected Ingredients:</h3>
+              <h3 className="font-semibold text-lg dark:text-white">Selected Ingredients:</h3>
               <div className="mt-2 flex flex-wrap gap-2">
                 {selectedIngredients.map((ingredient, index) => (
                   <span 
@@ -448,11 +448,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
           )}
 
           {/* Styled Recipe Display */}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                e.preventDefault();
-                e.stopPropagation();
+          {parsedRecipe && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -572,11 +568,11 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                               <span className="text-yellow-500">•</span>
                               {tip}
                             </li>
-              ))}
-            </ul>
+                          ))}
+                        </ul>
                       </div>
-          </div>
-        )}
+                    </div>
+                  )}
 
                   {/* Nutrition */}
                   {parsedRecipe.nutrition.length > 0 && (
@@ -680,8 +676,8 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                             );
                           })}
                         </div>
-            </div>
-          </div>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -696,8 +692,8 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                 </div>
               </details>
             </motion.div>
-        )}
-      </motion.div>
+          )}
+        </motion.div>
       </div>
     </section>
   );
