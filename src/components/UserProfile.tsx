@@ -183,14 +183,6 @@ export default function UserProfile() {
                   <User className="w-10 h-10 text-green-600 dark:text-green-400" />
                 </div>
               )}
-                  alt="Profile"
-                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-4 border-green-100 dark:border-green-900/30"
-                />
-              ) : (
-                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-10 h-10 text-green-600 dark:text-green-400" />
-                </div>
-              )}
               <h2 className="text-xl font-semibold dark:text-white">
                 {displayProfile?.full_name || displayProfile?.username || 'User'}
               </h2>
@@ -200,21 +192,9 @@ export default function UserProfile() {
                   Demo Profile
                 </span>
               )}
-              {isDemo && (
-                <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full mt-1 mr-2">
-                  Demo Profile
-                </span>
-              )}
               <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-full mt-2">
                 {displayProfile?.role === 'restaurant_admin' ? 'Restaurant Admin' : 'Community Member'}
               </span>
-              
-              {/* User Bio */}
-              {displayProfile?.bio && (
-                <p className="text-gray-600 dark:text-gray-300 mt-3 text-sm italic">
-                  "{displayProfile.bio}"
-                </p>
-              )}
               
               {/* User Bio */}
               {displayProfile?.bio && (
