@@ -23,7 +23,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`fixed w-full z-50 ${isDarkMode ? 'bg-gray-900/80' : 'bg-white/80'} backdrop-blur-sm shadow-sm`}>
+    <nav className={`fixed w-full z-50 ${isDarkMode ? 'bg-slate-900/90 border-b border-slate-700/50' : 'bg-white/80'} backdrop-blur-md shadow-sm`}>
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <motion.div
@@ -154,7 +154,7 @@ function MobileNavLink({ href, onClick, children }: { href: string; onClick: () 
     <motion.a
       href={href}
       onClick={handleClick}
-      className={`${isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'} transition-colors px-4 py-2`}
+      className={`${isDarkMode ? 'text-slate-300 hover:text-emerald-400' : 'text-gray-600 hover:text-green-600'} transition-colors px-4 py-2 font-medium`}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >

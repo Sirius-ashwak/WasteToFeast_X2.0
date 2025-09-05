@@ -280,7 +280,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
       <div className="space-y-6">
         {/* Ingredient Selection Section */}
         <div className="bg-white rounded-lg shadow-md p-5 dark:bg-gray-800 dark:border dark:border-gray-700 w-full transition-colors duration-200">
-          <h3 className="text-xl font-bold mb-4 dark:text-gray-100">Select Ingredients</h3>
+          <h3 className="text-xl font-bold mb-4 dark:text-white">Select Ingredients</h3>
           <div className="flex flex-wrap gap-2 mb-4">
             {ingredients.map((ingredient, index) => (
               <button
@@ -476,9 +476,9 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                       <span className="font-medium text-gray-800 dark:text-gray-200">{parsedRecipe.servings}</span>
                     </div>
                     <div className="flex flex-col items-center bg-green-50 rounded-lg p-3 dark:bg-gray-700/50 transition-colors duration-200">
-                      <Utensils className="h-6 w-6 text-green-600 mb-1 dark:text-green-400" />
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Difficulty</span>
-                      <span className="font-medium text-gray-800 dark:text-gray-200">Medium</span>
+                      <Utensils className="h-6 w-6 text-green-600 mb-1 dark:text-emerald-400" />
+                      <span className="text-xs text-gray-500 dark:text-slate-400">Difficulty</span>
+                      <span className="font-medium text-gray-800 dark:text-white">Medium</span>
                     </div>
                   </div>
                   

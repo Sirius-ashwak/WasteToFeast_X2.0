@@ -38,7 +38,7 @@ function App() {
   return (
     <div className={`min-h-screen transition-colors duration-200 ${
       isDarkMode 
-        ? 'bg-gray-900 text-gray-100' 
+        ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white' 
         : 'bg-gradient-to-b from-green-50 to-white'
     }`}>
       <Toaster 
