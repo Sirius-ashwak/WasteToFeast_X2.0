@@ -53,26 +53,15 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
     `;
 
     // Use the updated API structure
-    const result = await model.generateContent({
-      contents: [
-        { 
-          role: 'user', 
-          parts: [
-            { text: prompt },
-            { 
-              inlineData: {
-                mimeType: imageFile.type,
-                data: base64Image
-              }
-            }
-          ]
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          mimeType: imageFile.type,
+          data: base64Image
         }
-      ],
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 1024,
-      },
-    });
+      }
+    ]);
 
     const response = await result.response;
     const text = response.text();
@@ -208,17 +197,7 @@ export async function generateRecipe(ingredients: string[]): Promise<string> {
       `;
 
     // Add safety settings and temperature to control output
-    const generationConfig = {
-      temperature: 0.7,
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 1024,
-    };
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig,
-    });
+    const result = await model.generateContent(prompt);
 
     const response = await result.response;
     const recipe = response.text();
