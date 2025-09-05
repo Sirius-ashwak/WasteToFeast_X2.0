@@ -49,18 +49,30 @@ function App() {
       return;
     }
     
-    setCurrentView(view);
-    
-    // Check restaurant admin access after setting the view
+    // Only allow restaurant view for restaurant admins
     if (view === 'restaurant' && !isRestaurantAdmin) {
       toast.error('Restaurant admin access required');
+      return;
     }
+    
+    setCurrentView(view);
   };
+
+  // Set default view based on user role after authentication
+  useEffect(() => {
+    if (isAuthenticated && currentView === 'home') {
+      if (isRestaurantAdmin) {
+        setCurrentView('restaurant');
+      } else {
+        setCurrentView('profile');
+      }
+    }
+  }, [isAuthenticated, isRestaurantAdmin]);
 
   const renderCurrentView = () => {
     switch (currentView) {
       case 'restaurant':
-        return <RestaurantDashboard />;
+        return isRestaurantAdmin ? <RestaurantDashboard /> : <UserProfile />;
       case 'profile':
         return <UserProfile />;
       default:

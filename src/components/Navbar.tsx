@@ -76,15 +76,17 @@ export default function Navbar({ currentView, onViewChange, onAuthClick }: Navba
                   className={`flex items-center gap-2 ${isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'} transition-colors ${currentView === 'profile' ? 'text-green-600 dark:text-green-400' : ''}`}
                 >
                   <User className="w-4 h-4" />
-                  Profile
+                  {isRestaurantAdmin ? 'My Account' : 'My Profile'}
                 </button>
-                <button
-                  onClick={() => onViewChange('restaurant')}
-                  className={`flex items-center gap-2 ${isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'} transition-colors ${currentView === 'restaurant' ? 'text-green-600 dark:text-green-400' : ''}`}
-                >
-                  <Building2 className="w-4 h-4" />
-                  Restaurant
-                </button>
+                {isRestaurantAdmin && (
+                  <button
+                    onClick={() => onViewChange('restaurant')}
+                    className={`flex items-center gap-2 ${isDarkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'} transition-colors ${currentView === 'restaurant' ? 'text-green-600 dark:text-green-400' : ''}`}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    My Restaurants
+                  </button>
+                )}
               </>
             )}
             
@@ -186,18 +188,20 @@ export default function Navbar({ currentView, onViewChange, onAuthClick }: Navba
                     className={`${isDarkMode ? 'text-slate-300 hover:text-emerald-400' : 'text-gray-600 hover:text-green-600'} transition-colors px-4 py-2 font-medium text-left flex items-center gap-2`}
                   >
                     <User className="w-4 h-4" />
-                    Profile
+                    {isRestaurantAdmin ? 'My Account' : 'My Profile'}
                   </button>
-                  <button
-                    onClick={() => {
-                      onViewChange('restaurant');
-                      setIsOpen(false);
-                    }}
-                    className={`${isDarkMode ? 'text-slate-300 hover:text-emerald-400' : 'text-gray-600 hover:text-green-600'} transition-colors px-4 py-2 font-medium text-left flex items-center gap-2`}
-                  >
-                    <Building2 className="w-4 h-4" />
-                    Restaurant
-                  </button>
+                  {isRestaurantAdmin && (
+                    <button
+                      onClick={() => {
+                        onViewChange('restaurant');
+                        setIsOpen(false);
+                      }}
+                      className={`${isDarkMode ? 'text-slate-300 hover:text-emerald-400' : 'text-gray-600 hover:text-green-600'} transition-colors px-4 py-2 font-medium text-left flex items-center gap-2`}
+                    >
+                      <Building2 className="w-4 h-4" />
+                      My Restaurants
+                    </button>
+                  )}
                 </>
               )}
               
