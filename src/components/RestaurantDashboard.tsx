@@ -11,7 +11,6 @@ import {
 } from '../services/foodSharing';
 import { toast } from 'react-hot-toast';
 import type { Database } from '../types/database';
-import { useStore } from '../store';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
