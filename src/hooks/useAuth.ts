@@ -117,21 +117,23 @@ export function useAuth() {
   };
 
   const signOut = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) {
-        throw error;
+        console.error('Sign out error:', error);
+        // Don't throw error, just log it and continue with local cleanup
       }
-      // Clear local state
-      setUser(null);
-      setProfile(null);
-      setSession(null);
     } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
+      console.error('Sign out error:', error);
+      // Don't throw error, continue with cleanup
     }
+    
+    // Always clear local state regardless of API response
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+    setLoading(false);
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {

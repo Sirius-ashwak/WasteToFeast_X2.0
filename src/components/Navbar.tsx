@@ -35,12 +35,11 @@ export default function Navbar({ currentView, onViewChange, onAuthClick }: Navba
     try {
       setIsOpen(false);
       await signOut();
-      onViewChange('home');
       toast.success('Signed out successfully');
+      onViewChange('home');
     } catch (error) {
       console.error('Sign out error:', error);
-      toast.error('Failed to sign out. Please try again.');
-      // Still navigate to home even if sign out failed
+      toast.error('Sign out error, but you have been logged out locally');
       onViewChange('home');
     }
   };
