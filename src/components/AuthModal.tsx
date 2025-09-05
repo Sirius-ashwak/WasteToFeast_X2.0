@@ -105,7 +105,10 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onSuc
       onSuccess?.();
     } catch (error) {
       console.error('Signup form error:', error);
-      toast.error(error instanceof Error ? error.message : 'Signup failed');
+      const errorMessage = error instanceof Error ? error.message : 'Signup failed';
+      toast.error(errorMessage);
+      
+      // Don't close modal on error, let user try again
     } finally {
       setLoading(false);
     }
