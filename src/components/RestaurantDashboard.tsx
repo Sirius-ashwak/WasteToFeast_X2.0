@@ -11,11 +11,13 @@ import {
 } from '../services/foodSharing';
 import { toast } from 'react-hot-toast';
 import type { Database } from '../types/database';
+import { useStore } from '../store';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
 export default function RestaurantDashboard() {
   const { user, profile, isRestaurantAdmin } = useAuth();
+  const { demoProfiles, initializeDemoProfiles } = useStore();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [foodListings, setFoodListings] = useState<FoodListingWithRestaurant[]>([]);
@@ -46,6 +48,10 @@ export default function RestaurantDashboard() {
   useEffect(() => {
     if (user && isRestaurantAdmin) {
       loadRestaurants();
+      // Initialize demo profiles if not already done
+      if (!demoProfiles.restaurant) {
+        initializeDemoProfiles();
+      }
     }
   }, [user, isRestaurantAdmin]);
 
@@ -230,6 +236,10 @@ export default function RestaurantDashboard() {
     }
   };
 
+  // Use demo profile data if available
+  const displayProfile = profile || (user && isRestaurantAdmin ? demoProfiles.restaurant : null);
+  const isDemo = !profile && !!demoProfiles.restaurant;
+
   if (!isRestaurantAdmin) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -258,6 +268,160 @@ export default function RestaurantDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {/* Restaurant Owner Profile Header */}
+      {displayProfile && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+          <div className="flex items-center gap-6">
+            {displayProfile.avatar_url ? (
+              <img
+                src={displayProfile.avatar_url}
+                alt="Profile"
+                className="w-16 h-16 rounded-full object-cover border-4 border-green-100 dark:border-green-900/30"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <Building2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+            )}
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {displayProfile.full_name}
+                </h1>
+                {isDemo && (
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                    Demo Profile
+                  </span>
+                )}
+              </div>
+              
+              {displayProfile.restaurant_info && (
+                <div className="mb-3">
+                  <h2 className="text-lg font-semibold text-green-600 dark:text-green-400">
+                    {displayProfile.restaurant_info.name}
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    {displayProfile.restaurant_info.cuisine_type} • Est. {displayProfile.restaurant_info.established}
+                  </p>
+                </div>
+              )}
+              
+              {displayProfile.bio && (
+                <p className="text-gray-600 dark:text-gray-300 text-sm italic mb-3">
+                  "{displayProfile.bio}"
+                </p>
+              )}
+              
+              {displayProfile.impact_stats && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-green-600 dark:text-green-400">
+                      {displayProfile.impact_stats.meals_shared}
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-300">Meals Shared</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                      {displayProfile.impact_stats.waste_prevented}
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-300">Waste Prevented</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                      {displayProfile.impact_stats.community_members_helped}
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-300">People Helped</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-orange-600 dark:text-orange-400">
+                      {displayProfile.impact_stats.months_active}
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-300">Months Active</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Restaurant Details */}
+          {displayProfile.restaurant_info && (
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Restaurant Details</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.restaurant_info.address}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.restaurant_info.operating_hours}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.email}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Specialties & Sustainability</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialties</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {displayProfile.restaurant_info.specialties.map((specialty: string, index: number) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs rounded-full"
+                          >
+                            {specialty}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sustainability Practices</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {displayProfile.restaurant_info.sustainability_practices.map((practice: string, index: number) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full"
+                          >
+                            {practice}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certifications</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {displayProfile.restaurant_info.certifications.map((cert: string, index: number) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 text-xs rounded-full"
+                          >
+                            {cert}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Restaurant Dashboard

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, MapPin, Clock, CheckCircle, Phone, Mail, Calendar, Utensils, Award, TrendingUp } from 'lucide-react';
+import { ChefHat } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { getUserClaims, markPickupCompleted, type ClaimWithDetails } from '../services/foodSharing';
 import { toast } from 'react-hot-toast';
+import { useStore } from '../store';
 
 export default function UserProfile() {
   const { user, profile, updateProfile, loading: authLoading, profileLoading, isRestaurantAdmin } = useAuth();
+  const { demoProfiles, initializeDemoProfiles } = useStore();
   const [claims, setClaims] = useState<ClaimWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
@@ -18,6 +21,10 @@ export default function UserProfile() {
   useEffect(() => {
     if (user) {
       loadUserClaims();
+      // Initialize demo profiles if not already done
+      if (!demoProfiles.user) {
+        initializeDemoProfiles();
+      }
     } else {
       setLoading(false);
     }
@@ -113,6 +120,10 @@ export default function UserProfile() {
   const totalMealsRescued = claims.length;
   const completionRate = claims.length > 0 ? Math.round((completedClaims.length / claims.length) * 100) : 0;
 
+  // Use demo profile data if available
+  const displayProfile = profile || (user ? demoProfiles.user : null);
+  const isDemo = !profile && !!demoProfiles.user;
+
   // Show loading if auth is loading or profile is loading or claims are loading
   if (authLoading || profileLoading || (loading && user)) {
     return (
@@ -161,16 +172,36 @@ export default function UserProfile() {
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="w-10 h-10 text-green-600 dark:text-green-400" />
-              </div>
+              {displayProfile?.avatar_url ? (
+                <img
+                  src={displayProfile.avatar_url}
+                  alt="Profile"
+                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-4 border-green-100 dark:border-green-900/30"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <User className="w-10 h-10 text-green-600 dark:text-green-400" />
+                </div>
+              )}
               <h2 className="text-xl font-semibold dark:text-white">
-                {profile?.full_name || profile?.username || 'User'}
+                {displayProfile?.full_name || displayProfile?.username || 'User'}
               </h2>
-              <p className="text-gray-600 dark:text-gray-300">@{profile?.username}</p>
+              <p className="text-gray-600 dark:text-gray-300">@{displayProfile?.username}</p>
+              {isDemo && (
+                <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full mt-1 mr-2">
+                  Demo Profile
+                </span>
+              )}
               <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-full mt-2">
-                {profile?.role === 'restaurant_admin' ? 'Restaurant Admin' : 'Community Member'}
+                {displayProfile?.role === 'restaurant_admin' ? 'Restaurant Admin' : 'Community Member'}
               </span>
+              
+              {/* User Bio */}
+              {displayProfile?.bio && (
+                <p className="text-gray-600 dark:text-gray-300 mt-3 text-sm italic">
+                  "{displayProfile.bio}"
+                </p>
+              )}
             </div>
 
             {editingProfile ? (
@@ -219,24 +250,57 @@ export default function UserProfile() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <Mail className="w-5 h-5" />
-                  <span>{user?.email}</span>
+                  <span>{user?.email || displayProfile?.email}</span>
                 </div>
-                {profile?.phone && (
+                {displayProfile?.phone && (
                   <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Phone className="w-5 h-5" />
-                    <span>{profile.phone}</span>
+                    <span>{displayProfile.phone}</span>
+                  </div>
+                )}
+                {displayProfile?.location && (
+                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <MapPin className="w-5 h-5" />
+                    <span>{displayProfile.location}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <Calendar className="w-5 h-5" />
-                  <span>Joined {formatDate(profile?.created_at || '')}</span>
+                  <span>Joined {formatDate(displayProfile?.created_at || '')}</span>
                 </div>
-                <button
-                  onClick={() => setEditingProfile(true)}
-                  className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Edit Profile
-                </button>
+                
+                {/* Additional Profile Info */}
+                {displayProfile?.favorite_cuisines && (
+                  <div>
+                    <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Favorite Cuisines</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {displayProfile.favorite_cuisines.map((cuisine: string, index: number) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs rounded-full"
+                        >
+                          {cuisine}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {displayProfile?.cooking_level && (
+                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <ChefHat className="w-5 h-5" />
+                    <span>Cooking Level: {displayProfile.cooking_level}</span>
+                  </div>
+                )}
+                
+                {!isDemo && (
+                  <button
+                    onClick={() => setEditingProfile(true)}
+                    className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Edit Profile
+                  </button>
+                )}
               </div>
             )}
           </div>
