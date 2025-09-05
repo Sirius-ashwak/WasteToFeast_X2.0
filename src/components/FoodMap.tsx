@@ -105,15 +105,15 @@ export default function FoodMap({ className = '' }: FoodMapProps) {
     }
 
     try {
-      toast.loading('Claiming food...', { id: 'claiming' });
+      const loadingToast = toast.loading('Claiming food...');
       await claimFoodListing(listingId, user.id);
-      toast.success('Food claimed successfully!', { id: 'claiming' });
+      toast.success('Food claimed successfully! Check your profile to see details.', { id: loadingToast });
       loadFoodListings(); // Refresh the listings
       setSelectedListing(null);
     } catch (error) {
       console.error('Error claiming food:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to claim food';
-      toast.error(errorMessage, { id: 'claiming' });
+      toast.error(errorMessage);
     }
   };
 

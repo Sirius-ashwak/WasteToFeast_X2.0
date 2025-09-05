@@ -19,6 +19,18 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
     setLoading(true);
     setError(null);
     setResults(null);
@@ -31,11 +43,11 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
       const result = await analyzeImage(file);
       setResults(result);
       onAnalysisComplete(result);
-      toast.success('Image analyzed successfully!');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to analyze image';
       setError(errorMessage);
       toast.error(errorMessage);
+      setPreview(null);
     } finally {
       setLoading(false);
     }

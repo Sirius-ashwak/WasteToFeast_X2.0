@@ -124,7 +124,7 @@ export default function RestaurantDashboard() {
     }
 
     try {
-      toast.loading('Creating restaurant...', { id: 'creating-restaurant' });
+      const loadingToast = toast.loading('Creating restaurant...');
       const restaurant = await createRestaurant({
         ...restaurantForm,
         latitude: lat,
@@ -144,11 +144,11 @@ export default function RestaurantDashboard() {
         contact_email: '',
         description: '',
       });
-      toast.success('Restaurant created successfully!', { id: 'creating-restaurant' });
+      toast.success('Restaurant created successfully!', { id: loadingToast });
     } catch (error) {
       console.error('Error creating restaurant:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create restaurant';
-      toast.error(errorMessage, { id: 'creating-restaurant' });
+      toast.error(errorMessage);
     }
   };
 

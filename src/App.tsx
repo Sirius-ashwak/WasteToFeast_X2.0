@@ -32,6 +32,15 @@ function App() {
         id: 'api-key-missing'
       });
     }
+    
+    // Check Supabase configuration
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      console.error('Supabase configuration is missing');
+      toast.error('Database configuration is missing. Please check your .env file.', {
+        duration: 5000,
+        id: 'supabase-missing'
+      });
+    }
   }, []);
 
   const handleAnalysisComplete = (result: AIAnalysisResult) => {
@@ -40,6 +49,14 @@ function App() {
     
     if (result.ingredients.length > 0) {
       toast.success(`Found ${result.ingredients.length} ingredients!`);
+      
+      // Scroll to recipe section after successful analysis
+      setTimeout(() => {
+        const recipesSection = document.getElementById('recipes');
+        if (recipesSection) {
+          recipesSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 500);
     }
   };
 
@@ -72,6 +89,11 @@ function App() {
   const renderCurrentView = () => {
     switch (currentView) {
       case 'restaurant':
+  // Handle successful authentication
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    toast.success('Successfully signed in!');
+  };
         return isRestaurantAdmin ? <RestaurantDashboard /> : <UserProfile />;
       case 'profile':
         return <UserProfile />;
@@ -170,6 +192,7 @@ function App() {
             color: isDarkMode ? '#e2e8f0' : '#1a202c',
             border: isDarkMode ? '1px solid #4a5568' : '1px solid #e2e8f0',
           },
+          duration: 4000,
         }}
       />
       <Navbar 
@@ -193,6 +216,7 @@ function App() {
       <AuthModal 
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
       />
       
       <Footer />

@@ -8,9 +8,10 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultTab?: 'login' | 'signup';
+  onSuccess?: () => void;
 }
 
-export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onSuccess }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(defaultTab);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -30,14 +31,35 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
     phone: '',
   });
 
+  // Reset forms when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setLoginForm({ email: '', password: '' });
+      setSignupForm({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        username: '',
+        full_name: '',
+        role: 'user',
+        phone: '',
+      });
+      setLoading(false);
+    }
+  }, [isOpen]);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!loginForm.email.trim() || !loginForm.password.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
     setLoading(true);
 
     try {
       await signIn(loginForm.email, loginForm.password);
-      toast.success('Successfully logged in!');
-      onClose();
+      onSuccess?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');
     } finally {
@@ -47,6 +69,11 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!signupForm.email.trim() || !signupForm.password.trim() || !signupForm.username.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
     
     if (signupForm.password !== signupForm.confirmPassword) {
       toast.error('Passwords do not match');
@@ -67,8 +94,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
         role: signupForm.role,
         phone: signupForm.phone || undefined,
       });
-      toast.success('Account created successfully!');
-      onClose();
+      onSuccess?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Signup failed');
     } finally {

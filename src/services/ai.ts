@@ -25,9 +25,9 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
       throw new Error('Invalid file type. Please upload an image.');
     }
 
-    const maxSize = 4 * 1024 * 1024; // 4MB
+    const maxSize = 5 * 1024 * 1024; // 5MB
     if (imageFile.size > maxSize) {
-      throw new Error('Image too large. Maximum size is 4MB.');
+      throw new Error('Image too large. Maximum size is 5MB.');
     }
 
     if (!API_KEY) {
@@ -43,13 +43,15 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
 
     // Enhanced prompt for better ingredient detection
     const prompt = `
-      You are a food analysis expert. Please analyze this food image and:
-      1. List all clearly visible ingredients
-      2. Suggest 3 possible recipes using these ingredients
+      You are a professional food analysis expert. Analyze this food image carefully and:
+      1. Identify ALL clearly visible food ingredients, items, and components
+      2. Be specific (e.g., "red bell pepper" not just "pepper")
+      3. Include herbs, spices, and seasonings if visible
+      4. Suggest 3-5 realistic recipes using these ingredients
       
-      Format your response exactly like this:
+      IMPORTANT: Format your response EXACTLY like this:
       ingredients: ingredient1, ingredient2, ingredient3
-      suggestions: recipe1, recipe2, recipe3
+      suggestions: recipe1, recipe2, recipe3, recipe4, recipe5
     `;
 
     // Use the updated API structure
@@ -89,15 +91,15 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
         .split(',')
         .map(s => s.trim())
         .filter(Boolean) :
-      ['Simple stir-fry', 'Basic salad', 'Quick soup'];
+      ['Simple stir-fry', 'Basic salad', 'Quick soup', 'One-pot meal'];
 
     if (ingredients.length === 0) {
-      throw new Error('No ingredients detected in the image');
+      throw new Error('No food ingredients detected. Please upload a clearer image of food items.');
     }
 
     return {
       ingredients,
-      confidence: 0.95,
+      confidence: Math.min(0.95, 0.7 + (ingredients.length * 0.05)),
       suggestions: suggestions.length > 0 ? suggestions : ['No suggestions available']
     };
 
