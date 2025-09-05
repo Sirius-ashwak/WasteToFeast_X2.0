@@ -5,8 +5,12 @@ import ImageUploader from './components/ImageUploader';
 import RecipeGenerator from './components/RecipeGenerator';
 import Dashboard from './components/Dashboard';
 import FoodSharingSection from './components/FoodSharingSection';
+import RestaurantDashboard from './components/RestaurantDashboard';
+import UserProfile from './components/UserProfile';
+import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import { useStore } from './store';
+import { useAuth } from './hooks/useAuth';
 import { Toaster } from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import type { AIAnalysisResult } from './types';
@@ -14,7 +18,10 @@ import { toast } from 'react-hot-toast';
 
 function App() {
   const { isDarkMode, setCurrentAnalysis } = useStore();
+  const { isAuthenticated, isRestaurantAdmin } = useAuth();
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
+  const [currentView, setCurrentView] = useState<'home' | 'restaurant' | 'profile'>('home');
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Verify environment variables are set
   useEffect(() => {
@@ -36,31 +43,29 @@ function App() {
     }
   };
 
-  return (
-    <div className={`min-h-screen transition-colors duration-200 ${
-      isDarkMode 
-        ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white' 
-        : 'bg-gradient-to-b from-green-50 to-white'
-    }`}>
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: isDarkMode ? '#2d3748' : '#fff',
-            color: isDarkMode ? '#e2e8f0' : '#1a202c',
-            border: isDarkMode ? '1px solid #4a5568' : '1px solid #e2e8f0',
-          },
-        }}
-      />
-      <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        <AnimatePresence mode="wait">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-          >
+  const handleViewChange = (view: 'home' | 'restaurant' | 'profile') => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    if (view === 'restaurant' && !isRestaurantAdmin) {
+      toast.error('Restaurant admin access required');
+      return;
+    }
+    
+    setCurrentView(view);
+  };
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'restaurant':
+        return <RestaurantDashboard />;
+      case 'profile':
+        return <UserProfile />;
+      default:
+        return (
+          <>
             <Hero />
             
             <div id="features" className="mt-12 mb-16">
@@ -134,9 +139,50 @@ function App() {
                 </div>
               </div>
             </div>
+          </>
+        );
+    }
+  };
+
+  return (
+    <div className={`min-h-screen transition-colors duration-200 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white' 
+        : 'bg-gradient-to-b from-green-50 to-white'
+    }`}>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: isDarkMode ? '#2d3748' : '#fff',
+            color: isDarkMode ? '#e2e8f0' : '#1a202c',
+            border: isDarkMode ? '1px solid #4a5568' : '1px solid #e2e8f0',
+          },
+        }}
+      />
+      <Navbar 
+        currentView={currentView}
+        onViewChange={handleViewChange}
+        onAuthClick={() => setShowAuthModal(true)}
+      />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <AnimatePresence mode="wait">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5 }}
+          >
+            {renderCurrentView()}
           </motion.div>
         </AnimatePresence>
       </main>
+      
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
+      
       <Footer />
     </div>
   );
