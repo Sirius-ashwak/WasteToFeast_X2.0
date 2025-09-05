@@ -122,7 +122,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} mt-12 pt-8 text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+        <div className={`border-t ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} mt-12 pt-8 text-center ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>
           <p>© {new Date().getFullYear()} Waste to Feast. All rights reserved.</p>
         </div>
       </div>

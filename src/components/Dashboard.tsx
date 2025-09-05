@@ -285,8 +285,8 @@ export default function Dashboard() {
                   <span className="dark:text-gray-200">Recent cooking activity shows consistent improvement in efficiency</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-blue-500" />
-                  <span className="dark:text-gray-200">Keep up the great work! Your skills are developing nicely.</span>
+                  <Target className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                  <span className="dark:text-slate-200">Keep up the great work! Your skills are developing nicely.</span>
                 </div>
               </div>
             </div>

@@ -476,9 +476,9 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                       <span className="font-medium text-gray-800 dark:text-gray-200">{parsedRecipe.servings}</span>
                     </div>
                     <div className="flex flex-col items-center bg-green-50 rounded-lg p-3 dark:bg-gray-700/50 transition-colors duration-200">
-                      <Utensils className="h-6 w-6 text-green-600 mb-1 dark:text-emerald-400" />
-                      <span className="text-xs text-gray-500 dark:text-slate-400">Difficulty</span>
-                      <span className="font-medium text-gray-800 dark:text-white">Medium</span>
+                      <Utensils className="h-6 w-6 text-green-600 mb-1 dark:text-green-400" />
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Difficulty</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">Medium</span>
                     </div>
                   </div>
                   
@@ -683,7 +683,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                 <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
                   Show raw recipe text
                 </summary>
-                <div className="mt-2 bg-gray-50 p-4 rounded-lg dark:bg-gray-700 dark:border dark:border-gray-600 overflow-auto max-h-[300px] transition-colors duration-200">
+                <div className="mt-2 bg-gray-50 p-4 rounded-lg dark:bg-slate-700/50 dark:border dark:border-slate-600 overflow-auto max-h-[300px] transition-colors duration-200"
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">{recipe}</pre>
                 </div>
               </details>
