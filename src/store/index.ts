@@ -37,6 +37,10 @@ interface AppState {
     user: any;
     restaurant: any;
   };
+  demoProfiles: {
+    user: any;
+    restaurant: any;
+  };
   setRecipes: (recipes: Recipe[]) => void;
   setWasteData: (data: FoodWasteData[]) => void;
   addMealToHistory: (meal: Omit<MealHistory, 'id' | 'completedAt'>) => void;
@@ -45,6 +49,7 @@ interface AppState {
   setLoading: (loading: boolean) => void;
   toggleDarkMode: () => void;
   initializeSampleData: () => void;
+  initializeDemoProfiles: () => void;
   initializeDemoProfiles: () => void;
 }
 
@@ -328,6 +333,65 @@ export const useStore = create<AppState>()(
     
     // Update cooking stats after adding sample data
     get().updateCookingStats();
+  },
+  initializeDemoProfiles: () => {
+    const demoUser = {
+      id: 'demo-user-123',
+      username: 'foodie_sarah',
+      full_name: 'Sarah Johnson',
+      role: 'user',
+      phone: '+1 (555) 123-4567',
+      avatar_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+      created_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+      email: 'sarah.johnson@example.com',
+      bio: 'Passionate home cook and sustainability advocate. Love turning leftovers into gourmet meals!',
+      location: 'San Francisco, CA',
+      favorite_cuisines: ['Italian', 'Asian', 'Mediterranean'],
+      cooking_level: 'Intermediate',
+      dietary_preferences: ['Vegetarian-friendly', 'Organic when possible'],
+    };
+
+    const demoRestaurant = {
+      id: 'demo-restaurant-456',
+      username: 'greenbite_sf',
+      full_name: 'Marcus Chen',
+      role: 'restaurant_admin',
+      phone: '+1 (555) 987-6543',
+      avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+      created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+      email: 'marcus@greenbite.com',
+      bio: 'Owner of Green Bite Café. Committed to reducing food waste and supporting our community.',
+      restaurant_info: {
+        name: 'Green Bite Café',
+        address: '123 Mission Street, San Francisco, CA 94103',
+        cuisine_type: 'Farm-to-Table American',
+        established: '2019',
+        specialties: ['Organic Salads', 'Artisan Sandwiches', 'Fresh Soups'],
+        sustainability_practices: [
+          'Zero-waste kitchen',
+          'Local sourcing',
+          'Compostable packaging',
+          'Community food sharing'
+        ],
+        operating_hours: 'Mon-Fri: 7AM-8PM, Sat-Sun: 8AM-9PM',
+        certifications: ['Organic Certified', 'Green Business Certified'],
+      },
+      impact_stats: {
+        meals_shared: 1247,
+        waste_prevented: '2,340 lbs',
+        community_members_helped: 892,
+        months_active: 18,
+      }
+    };
+
+    set({
+      demoProfiles: {
+        user: demoUser,
+        restaurant: demoRestaurant,
+      }
+    });
   },
   initializeDemoProfiles: () => {
     const demoUser = {
