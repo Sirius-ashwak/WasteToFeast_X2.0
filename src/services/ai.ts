@@ -19,15 +19,6 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-function base64Encode(arrayBuffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   retries: number = RETRY_CONFIG.maxRetries
@@ -64,9 +55,18 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
       throw new Error('Missing Gemini API key. Please check your environment variables.');
     }
 
-    // Convert image to base64
-    const arrayBuffer = await imageFile.arrayBuffer();
-    const base64Image = base64Encode(arrayBuffer);
+    // Convert image to base64 using FileReader for proper encoding
+    const base64Image = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+        const base64Data = result.split(',')[1];
+        resolve(base64Data);
+      };
+      reader.onerror = () => reject(new Error('Failed to read image file'));
+      reader.readAsDataURL(imageFile);
+    });
 
     // Initialize Gemini model - Using 1.5-flash for better analysis
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
