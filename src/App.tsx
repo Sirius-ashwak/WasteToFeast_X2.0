@@ -18,7 +18,7 @@ import { toast } from 'react-hot-toast';
 
 function App() {
   const { isDarkMode, setCurrentAnalysis } = useStore();
-  const { isAuthenticated, isRestaurantAdmin, loading: authLoading } = useAuth();
+  const { isAuthenticated, isRestaurantAdmin, loading: authLoading, user } = useAuth();
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'restaurant' | 'profile'>('home');
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -77,19 +77,20 @@ function App() {
 
   // Set default view based on user role after authentication
   useEffect(() => {
-    if (isAuthenticated && !authLoading && currentView === 'home') {
-      if (isRestaurantAdmin) {
-        setCurrentView('restaurant');
-      } else {
-        setCurrentView('profile');
+    if (isAuthenticated && !authLoading) {
+      // Only auto-navigate if we're on home and user just logged in
+      if (currentView === 'home' && user) {
+        // Don't auto-navigate, let user stay on home page
+        // They can manually navigate to their profile/restaurant dashboard
       }
     }
-  }, [isAuthenticated, isRestaurantAdmin, authLoading, currentView]);
+  }, [isAuthenticated, isRestaurantAdmin, authLoading, currentView, user]);
 
   // Handle successful authentication
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
     toast.success('Successfully signed in!');
+    // Don't auto-navigate, let user stay where they are
   };
 
   const renderCurrentView = () => {

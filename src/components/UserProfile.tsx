@@ -21,6 +21,16 @@ export default function UserProfile() {
     } else {
       setLoading(false);
     }
+    
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        console.warn('User profile loading timeout - continuing with empty data');
+      }
+    }, 8000); // 8 second timeout
+    
+    return () => clearTimeout(timeout);
   }, [user]);
 
   useEffect(() => {
@@ -38,13 +48,10 @@ export default function UserProfile() {
     try {
       setLoading(true);
       const data = await getUserClaims(user.id);
-      setClaims(data);
+      setClaims(data || []);
     } catch (error) {
       console.error('Error loading claims:', error);
       // Don't show error toast for empty claims, it's normal
-      if (error instanceof Error && !error.message.includes('0 rows')) {
-        toast.error('Failed to load your claims');
-      }
       setClaims([]);
     } finally {
       setLoading(false);

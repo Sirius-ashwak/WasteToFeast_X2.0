@@ -69,16 +69,27 @@ export default function FoodMap({ className = '' }: FoodMapProps) {
   useEffect(() => {
     loadFoodListings();
     getUserLocation();
+    
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        console.warn('Food map loading timeout - continuing with empty data');
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(timeout);
   }, []);
 
   const loadFoodListings = async () => {
     try {
       setLoading(true);
       const data = await getAvailableFoodListings();
-      setListings(data);
+      setListings(data || []);
     } catch (error) {
       console.error('Error loading food listings:', error);
-      toast.error('Failed to load food listings');
+      setListings([]);
+      // Don't show error toast immediately, might be due to no data
     } finally {
       setLoading(false);
     }

@@ -76,32 +76,48 @@ export async function createFoodListing(listingData: {
 }
 
 export async function getAvailableFoodListings() {
-  const { data, error } = await supabase
-    .from('food_listings')
-    .select(`
-      *,
-      restaurants (*)
-    `)
-    .eq('is_claimed', false)
-    .gte('pickup_end_time', new Date().toISOString())
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('food_listings')
+      .select(`
+        *,
+        restaurants (*)
+      `)
+      .eq('is_claimed', false)
+      .gte('pickup_end_time', new Date().toISOString())
+      .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return data as FoodListingWithRestaurant[];
+    if (error) {
+      console.error('Error fetching food listings:', error);
+      return [];
+    }
+    return (data || []) as FoodListingWithRestaurant[];
+  } catch (error) {
+    console.error('Error in getAvailableFoodListings:', error);
+    return [];
+  }
 }
 
 export async function getFoodListingsByRestaurant(restaurantId: string) {
-  const { data, error } = await supabase
-    .from('food_listings')
-    .select(`
-      *,
-      restaurants (*)
-    `)
-    .eq('restaurant_id', restaurantId)
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('food_listings')
+      .select(`
+        *,
+        restaurants (*)
+      `)
+      .eq('restaurant_id', restaurantId)
+      .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return data as FoodListingWithRestaurant[];
+    if (error) {
+      console.error('Error fetching restaurant food listings:', error);
+      return [];
+    }
+    return (data || []) as FoodListingWithRestaurant[];
+  } catch (error) {
+    console.error('Error in getFoodListingsByRestaurant:', error);
+    return [];
+  }
 }
 
 export async function claimFoodListing(listingId: string, userId: string) {
@@ -181,29 +197,34 @@ export async function claimFoodListing(listingId: string, userId: string) {
 }
 
 export async function getUserClaims(userId: string) {
-  const { data, error } = await supabase
-    .from('claims')
-    .select(`
-      *,
-      food_listings (
+  try {
+    const { data, error } = await supabase
+      .from('claims')
+      .select(`
         *,
-        restaurants (*)
-      )
-    `)
-    .eq('user_id', userId)
-    .order('claimed_at', { ascending: false });
+        food_listings (
+          *,
+          restaurants (*)
+        )
+      `)
+      .eq('user_id', userId)
+      .order('claimed_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching user claims:', error);
-    throw error;
-  }
-  
-  // Return empty array if no data
-  if (!data) {
+    if (error) {
+      console.error('Error fetching user claims:', error);
+      return [];
+    }
+    
+    // Return empty array if no data
+    if (!data) {
+      return [];
+    }
+    
+    return data as ClaimWithDetails[];
+  } catch (error) {
+    console.error('Error in getUserClaims:', error);
     return [];
   }
-  
-  return data as ClaimWithDetails[];
 }
 
 export async function markPickupCompleted(claimId: string) {
