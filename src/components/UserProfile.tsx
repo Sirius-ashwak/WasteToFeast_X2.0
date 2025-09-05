@@ -6,7 +6,7 @@ import { getUserClaims, markPickupCompleted, type ClaimWithDetails } from '../se
 import { toast } from 'react-hot-toast';
 
 export default function UserProfile() {
-  const { user, profile, updateProfile, loading: authLoading, profileLoading } = useAuth();
+  const { user, profile, updateProfile, loading: authLoading, profileLoading, isRestaurantAdmin } = useAuth();
   const [claims, setClaims] = useState<ClaimWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
