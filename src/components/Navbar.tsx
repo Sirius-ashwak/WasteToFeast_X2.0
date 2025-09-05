@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Sprout, Menu, X, Sun, Moon, User, Building2, LogOut } from 'lucide-react';
 import { useStore } from '../store';
 import { useAuth } from '../hooks/useAuth';
+import { toast } from 'react-hot-toast';
 
 interface NavbarProps {
   currentView: 'home' | 'restaurant' | 'profile';
