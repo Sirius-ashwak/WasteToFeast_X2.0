@@ -88,14 +88,23 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onSuc
     setLoading(true);
 
     try {
+      console.log('Starting signup with form data:', {
+        email: signupForm.email,
+        username: signupForm.username,
+        role: signupForm.role
+      });
+      
       await signUp(signupForm.email, signupForm.password, {
         username: signupForm.username,
         full_name: signupForm.full_name || undefined,
         role: signupForm.role,
         phone: signupForm.phone || undefined,
       });
+      
+      console.log('Signup completed successfully');
       onSuccess?.();
     } catch (error) {
+      console.error('Signup form error:', error);
       toast.error(error instanceof Error ? error.message : 'Signup failed');
     } finally {
       setLoading(false);
