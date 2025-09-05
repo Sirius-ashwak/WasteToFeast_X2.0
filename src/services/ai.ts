@@ -1,6 +1,16 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { AIAnalysisResult } from '../types';
 
+// Utility function to wait for a specified time
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Retry configuration
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelay: 2000, // 2 seconds
+  maxDelay: 10000, // 10 seconds
+};
+
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!API_KEY) {
@@ -16,6 +26,26 @@ function base64Encode(arrayBuffer: ArrayBuffer): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
+}
+
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  retries: number = RETRY_CONFIG.maxRetries
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && error?.message?.includes('overloaded')) {
+      const delay = Math.min(
+        RETRY_CONFIG.baseDelay * (RETRY_CONFIG.maxRetries - retries + 1),
+        RETRY_CONFIG.maxDelay
+      );
+      console.log(`API overloaded, retrying in ${delay}ms... (${retries} retries left)`);
+      await wait(delay);
+      return retryWithBackoff(fn, retries - 1);
+    }
+    throw error;
+  }
 }
 
 export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
@@ -65,8 +95,12 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
       }
     ]);
 
-    const response = await result.response;
-    const text = response.text();
+    const analysisFunction = async () => {
+      const response = await result.response;
+      return response.text();
+    };
+
+    const text = await retryWithBackoff(analysisFunction);
 
     if (!text) {
       throw new Error('No analysis results received');
@@ -106,6 +140,9 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
   } catch (error) {
     console.error('Image analysis error:', error);
     if (error instanceof Error) {
+      if (error.message.includes('overloaded')) {
+        throw new Error('The AI service is currently busy. Please try again in a few moments.');
+      }
       throw new Error(`Analysis failed: ${error.message}`);
     }
     throw new Error('Failed to analyze image. Please try again.');
@@ -199,10 +236,13 @@ export async function generateRecipe(ingredients: string[]): Promise<string> {
       `;
 
     // Add safety settings and temperature to control output
-    const result = await model.generateContent(prompt);
+    const recipeFunction = async () => {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    };
 
-    const response = await result.response;
-    const recipe = response.text();
+    const recipe = await retryWithBackoff(recipeFunction);
 
     if (!recipe) {
       throw new Error('No recipe generated');
@@ -212,6 +252,9 @@ export async function generateRecipe(ingredients: string[]): Promise<string> {
   } catch (error) {
     console.error('Recipe generation error:', error);
     if (error instanceof Error) {
+      if (error.message.includes('overloaded')) {
+        throw new Error('The AI service is currently busy. Please try again in a few moments.');
+      }
       throw new Error(`Failed to generate recipe: ${error.message}`);
     }
     throw new Error('Failed to generate recipe. Please try again.');

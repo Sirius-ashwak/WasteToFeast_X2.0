@@ -46,7 +46,15 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to analyze image';
       setError(errorMessage);
-      toast.error(errorMessage);
+      
+      // Show different toast messages based on error type
+      if (errorMessage.includes('busy') || errorMessage.includes('overloaded')) {
+        toast.error('AI service is busy - trying again automatically...', {
+          duration: 4000,
+        });
+      } else {
+        toast.error(errorMessage);
+      }
       setPreview(null);
     } finally {
       setLoading(false);
