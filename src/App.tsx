@@ -86,14 +86,15 @@ function App() {
     }
   }, [isAuthenticated, isRestaurantAdmin, authLoading, currentView]);
 
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'restaurant':
   // Handle successful authentication
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
     toast.success('Successfully signed in!');
   };
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'restaurant':
         return isRestaurantAdmin ? <RestaurantDashboard /> : <UserProfile />;
       case 'profile':
         return <UserProfile />;
