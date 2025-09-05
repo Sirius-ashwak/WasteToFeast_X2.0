@@ -141,7 +141,6 @@ export function useAuth() {
     phone?: string;
   }) => {
     try {
-      setLoading(true);
       console.log('Starting signup process...');
     
       const { data, error } = await supabase.auth.signUp({
@@ -179,14 +178,15 @@ export function useAuth() {
           throw profileError;
         }
         console.log('Profile created successfully');
+        
+        // Fetch the created profile immediately
+        await fetchUserProfile(data.user.id);
       }
 
       return data;
     } catch (error) {
       console.error('Signup process error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 

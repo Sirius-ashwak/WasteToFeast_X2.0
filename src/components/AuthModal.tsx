@@ -102,6 +102,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onSuc
       });
       
       console.log('Signup completed successfully');
+      toast.success('Account created successfully!');
       onSuccess?.();
     } catch (error) {
       console.error('Signup form error:', error);
