@@ -267,6 +267,18 @@ export default function RestaurantDashboard() {
         </p>
       </div>
 
+      {!isRestaurantAdmin && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            <p className="text-yellow-800 dark:text-yellow-200">
+              <strong>Restaurant Admin Access Required:</strong> You need to have a restaurant admin account to manage restaurants and food listings. 
+              Please sign up with a restaurant admin account or contact support.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Restaurant Selection */}
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1">

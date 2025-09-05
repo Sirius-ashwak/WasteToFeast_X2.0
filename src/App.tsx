@@ -49,12 +49,12 @@ function App() {
       return;
     }
     
+    setCurrentView(view);
+    
+    // Check restaurant admin access after setting the view
     if (view === 'restaurant' && !isRestaurantAdmin) {
       toast.error('Restaurant admin access required');
-      return;
     }
-    
-    setCurrentView(view);
   };
 
   const renderCurrentView = () => {

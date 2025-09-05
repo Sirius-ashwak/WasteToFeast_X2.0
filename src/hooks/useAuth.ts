@@ -27,6 +27,7 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -43,6 +44,7 @@ export function useAuth() {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -52,6 +54,7 @@ export function useAuth() {
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user profile:', error);
       } else {
+        console.log('User profile loaded:', data);
         setProfile(data);
       }
     } catch (error) {
