@@ -151,6 +151,9 @@ export function useAuth() {
 
       if (error) {
         console.error('Signup error:', error);
+        if (error.message === 'User already registered') {
+          throw new Error('An account with this email already exists. Please sign in instead or use a different email address.');
+        }
         throw error;
       }
 
