@@ -89,11 +89,46 @@ export default function RestaurantDashboard() {
     e.preventDefault();
     if (!user) return;
 
+    // Validate form data
+    if (!restaurantForm.name.trim()) {
+      toast.error('Restaurant name is required');
+      return;
+    }
+
+    if (!restaurantForm.address.trim()) {
+      toast.error('Address is required');
+      return;
+    }
+
+    if (!restaurantForm.latitude || !restaurantForm.longitude) {
+      toast.error('Latitude and longitude are required');
+      return;
+    }
+
+    const lat = parseFloat(restaurantForm.latitude);
+    const lng = parseFloat(restaurantForm.longitude);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      toast.error('Please enter valid latitude and longitude values');
+      return;
+    }
+
+    if (lat < -90 || lat > 90) {
+      toast.error('Latitude must be between -90 and 90');
+      return;
+    }
+
+    if (lng < -180 || lng > 180) {
+      toast.error('Longitude must be between -180 and 180');
+      return;
+    }
+
     try {
+      toast.loading('Creating restaurant...', { id: 'creating-restaurant' });
       const restaurant = await createRestaurant({
         ...restaurantForm,
-        latitude: parseFloat(restaurantForm.latitude),
-        longitude: parseFloat(restaurantForm.longitude),
+        latitude: lat,
+        longitude: lng,
         restaurant_admin_id: user.id,
       });
       
@@ -109,10 +144,11 @@ export default function RestaurantDashboard() {
         contact_email: '',
         description: '',
       });
-      toast.success('Restaurant created successfully!');
+      toast.success('Restaurant created successfully!', { id: 'creating-restaurant' });
     } catch (error) {
       console.error('Error creating restaurant:', error);
-      toast.error('Failed to create restaurant');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create restaurant';
+      toast.error(errorMessage, { id: 'creating-restaurant' });
     }
   };
 
@@ -120,7 +156,39 @@ export default function RestaurantDashboard() {
     e.preventDefault();
     if (!selectedRestaurant) return;
 
+    // Validate form data
+    if (!foodForm.food_item.trim()) {
+      toast.error('Food item name is required');
+      return;
+    }
+
+    if (!foodForm.quantity.trim()) {
+      toast.error('Quantity is required');
+      return;
+    }
+
+    if (!foodForm.pickup_start_time || !foodForm.pickup_end_time) {
+      toast.error('Pickup times are required');
+      return;
+    }
+
+    // Validate pickup times
+    const startTime = new Date(foodForm.pickup_start_time);
+    const endTime = new Date(foodForm.pickup_end_time);
+    const now = new Date();
+
+    if (startTime <= now) {
+      toast.error('Pickup start time must be in the future');
+      return;
+    }
+
+    if (endTime <= startTime) {
+      toast.error('Pickup end time must be after start time');
+      return;
+    }
+
     try {
+      toast.loading('Creating food listing...', { id: 'creating-food' });
       await createFoodListing({
         ...foodForm,
         restaurant_id: selectedRestaurant.id,
@@ -139,10 +207,11 @@ export default function RestaurantDashboard() {
         dietary_info: [],
         image_url: '',
       });
-      toast.success('Food listing created successfully!');
+      toast.success('Food listing created successfully!', { id: 'creating-food' });
     } catch (error) {
       console.error('Error creating food listing:', error);
-      toast.error('Failed to create food listing');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create food listing';
+      toast.error(errorMessage, { id: 'creating-food' });
     }
   };
 

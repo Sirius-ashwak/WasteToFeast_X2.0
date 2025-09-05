@@ -65,6 +65,7 @@ export function useAuth() {
     username: string;
     full_name?: string;
     role?: 'user' | 'restaurant_admin';
+    phone?: string;
   }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -82,6 +83,7 @@ export function useAuth() {
           username: userData.username,
           full_name: userData.full_name || null,
           role: userData.role || 'user',
+          phone: userData.phone || null,
         });
 
       if (profileError) {

@@ -65,6 +65,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
         username: signupForm.username,
         full_name: signupForm.full_name || undefined,
         role: signupForm.role,
+        phone: signupForm.phone || undefined,
       });
       toast.success('Account created successfully!');
       onClose();

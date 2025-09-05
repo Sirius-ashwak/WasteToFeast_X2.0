@@ -105,46 +105,79 @@ export async function getFoodListingsByRestaurant(restaurantId: string) {
 }
 
 export async function claimFoodListing(listingId: string, userId: string) {
-  // Start a transaction-like operation
-  const { data: listing, error: fetchError } = await supabase
-    .from('food_listings')
-    .select('*')
-    .eq('id', listingId)
-    .eq('is_claimed', false)
-    .single();
+  try {
+    // First check if the listing exists and is available
+    const { data: listing, error: fetchError } = await supabase
+      .from('food_listings')
+      .select('*')
+      .eq('id', listingId)
+      .single();
 
-  if (fetchError) throw fetchError;
-  if (!listing) throw new Error('Food listing not available');
+    if (fetchError) {
+      console.error('Error fetching listing:', fetchError);
+      throw new Error('Food listing not found');
+    }
 
-  // Update the listing
-  const { data: updatedListing, error: updateError } = await supabase
-    .from('food_listings')
-    .update({
-      is_claimed: true,
-      claimed_by_user_id: userId,
-      claimed_at: new Date().toISOString(),
-    })
-    .eq('id', listingId)
-    .eq('is_claimed', false) // Double-check it's still available
-    .select()
-    .single();
+    if (!listing) {
+      throw new Error('Food listing not found');
+    }
 
-  if (updateError) throw updateError;
-  if (!updatedListing) throw new Error('Failed to claim food listing');
+    if (listing.is_claimed) {
+      throw new Error('This food has already been claimed');
+    }
 
-  // Create a claim record
-  const { data: claim, error: claimError } = await supabase
-    .from('claims')
-    .insert({
-      food_listing_id: listingId,
-      user_id: userId,
-    })
-    .select()
-    .single();
+    // Update the listing to mark as claimed
+    const { data: updatedListing, error: updateError } = await supabase
+      .from('food_listings')
+      .update({
+        is_claimed: true,
+        claimed_by_user_id: userId,
+        claimed_at: new Date().toISOString(),
+      })
+      .eq('id', listingId)
+      .eq('is_claimed', false) // Ensure it's still available
+      .select()
+      .single();
 
-  if (claimError) throw claimError;
+    if (updateError) {
+      console.error('Error updating listing:', updateError);
+      throw new Error('Failed to claim food listing');
+    }
 
-  return { listing: updatedListing, claim };
+    if (!updatedListing) {
+      throw new Error('Food listing was claimed by someone else');
+    }
+
+    // Create a claim record
+    const { data: claim, error: claimError } = await supabase
+      .from('claims')
+      .insert({
+        food_listing_id: listingId,
+        user_id: userId,
+      })
+      .select()
+      .single();
+
+    if (claimError) {
+      console.error('Error creating claim:', claimError);
+      // Try to rollback the listing update
+      await supabase
+        .from('food_listings')
+        .update({
+          is_claimed: false,
+          claimed_by_user_id: null,
+          claimed_at: null,
+        })
+        .eq('id', listingId);
+      
+      throw new Error('Failed to create claim record');
+    }
+
+    return { listing: updatedListing, claim };
+  } catch (error) {
+    console.error('Error in claimFoodListing:', error);
+    throw error;
+  }
 }
 
 export async function getUserClaims(userId: string) {

@@ -47,12 +47,14 @@ export default function UserProfile() {
 
   const handleMarkCompleted = async (claimId: string) => {
     try {
+      toast.loading('Marking pickup as completed...', { id: 'completing' });
       await markPickupCompleted(claimId);
-      toast.success('Pickup marked as completed!');
+      toast.success('Pickup marked as completed!', { id: 'completing' });
       loadUserClaims(); // Refresh the claims
     } catch (error) {
       console.error('Error marking pickup completed:', error);
-      toast.error('Failed to mark pickup as completed');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to mark pickup as completed';
+      toast.error(errorMessage, { id: 'completing' });
     }
   };
 
@@ -60,13 +62,20 @@ export default function UserProfile() {
     e.preventDefault();
     if (!user) return;
 
+    if (!profileForm.full_name.trim()) {
+      toast.error('Full name cannot be empty');
+      return;
+    }
+
     try {
+      toast.loading('Updating profile...', { id: 'updating-profile' });
       await updateProfile(profileForm);
       setEditingProfile(false);
-      toast.success('Profile updated successfully!');
+      toast.success('Profile updated successfully!', { id: 'updating-profile' });
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
+      toast.error(errorMessage, { id: 'updating-profile' });
     }
   };
 
