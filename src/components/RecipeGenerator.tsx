@@ -395,7 +395,11 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                   ))}
                 </div>
                 <button
-                  onClick={handleSaveRecipe}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSaveRecipe();
+                  }}
                   className="ml-4 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm"
                 >
                   <Save className="w-4 h-4" />

@@ -58,7 +58,7 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 Drop your food image here, or click to browse
               </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
+              <p className="text-xs text-gray-400 dark:text-gray-300">
                 Supports: PNG, JPG or WEBP (max. 5MB)
               </p>
             </div>
@@ -92,7 +92,7 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
 
           {/* Error message */}
           {error && (
-            <div className="p-4 bg-red-50 text-red-600 rounded-lg dark:bg-red-900 dark:text-red-200">
+            <div className="p-4 bg-red-50 text-red-600 rounded-lg dark:bg-red-900/30 dark:text-red-100 dark:border dark:border-red-800">
               <p className="font-medium">Error: {error}</p>
             </div>
           )}
@@ -123,7 +123,7 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
             
             {/* Detected Ingredients */}
             <div className="bg-gray-100 rounded-lg p-4 dark:bg-gray-700 transition-colors duration-200">
-              <h4 className="font-medium mb-3 text-gray-700 dark:text-gray-300">Detected Ingredients</h4>
+              <h4 className="font-medium mb-3 text-gray-700 dark:text-gray-100">Detected Ingredients</h4>
               {results.ingredients.length > 0 ? (
                 <ul className="space-y-2">
                   {results.ingredients.map((ingredient, index) => (
@@ -135,12 +135,12 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
                       className="flex items-center gap-2 bg-white p-2 rounded-md shadow-sm dark:bg-gray-600 transition-colors duration-200"
                     >
                       <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-800 dark:text-gray-200">{ingredient}</span>
+                      <span className="text-gray-800 dark:text-gray-100">{ingredient}</span>
                     </motion.li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 italic">No ingredients detected</p>
+                <p className="text-gray-500 dark:text-gray-300 italic">No ingredients detected</p>
               )}
             </div>
           </div>
@@ -151,7 +151,7 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
                 setResults(null);
                 setPreview(null);
               }}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors dark:border-gray-500 dark:text-gray-100 dark:hover:bg-gray-600"
             >
               <RefreshCcw className="w-4 h-4" />
               Clear Results

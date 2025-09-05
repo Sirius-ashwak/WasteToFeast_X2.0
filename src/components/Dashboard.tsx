@@ -178,7 +178,7 @@ export default function Dashboard() {
           </div>
           
           {mealHistory.length > 0 ? (
-            <ul className="space-y-3 text-gray-700 dark:text-gray-300">
+            <ul className="space-y-3 text-gray-700 dark:text-gray-100">
               <li className="flex items-start gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
                 <p>You've cooked {cookingStats.totalMealsCooked} meals, saving approximately {Math.round(cookingStats.totalMealsCooked * 12)} minutes compared to ordering out</p>
@@ -201,7 +201,7 @@ export default function Dashboard() {
               </li>
             </ul>
           ) : (
-            <ul className="space-y-3 text-gray-700 dark:text-gray-300">
+            <ul className="space-y-3 text-gray-700 dark:text-gray-100">
             <li className="flex items-start gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
               <p>Batch cook ingredients to save up to 40% of time during the week</p>
@@ -282,11 +282,11 @@ export default function Dashboard() {
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 <div className="flex items-center gap-2 mb-2">
                   <ChefHat className="w-4 h-4 text-green-500" />
-                  <span>Recent cooking activity shows consistent improvement in efficiency</span>
+                  <span className="dark:text-gray-200">Recent cooking activity shows consistent improvement in efficiency</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-blue-500" />
-                  <span>Keep up the great work! Your skills are developing nicely.</span>
+                  <span className="dark:text-gray-200">Keep up the great work! Your skills are developing nicely.</span>
                 </div>
               </div>
             </div>

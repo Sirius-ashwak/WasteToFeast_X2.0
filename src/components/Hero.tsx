@@ -32,7 +32,7 @@ export default function Hero() {
             Waste to Feast
           </h1>
           
-          <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-700 dark:text-gray-100 mb-8 max-w-2xl mx-auto">
             Transform your leftover ingredients into delicious meals with AI-powered recipe suggestions
           </p>
           
