@@ -84,7 +84,12 @@ export function useAuth() {
           role: userData.role || 'user',
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        if (profileError.code === '23505') {
+          throw new Error('Username is already taken. Please choose a different one.');
+        }
+        throw profileError;
+      }
     }
 
     return data;
