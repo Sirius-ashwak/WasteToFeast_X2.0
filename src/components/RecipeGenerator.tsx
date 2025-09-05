@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { generateRecipe } from '../services/ai';
-import { ChefHat, Clock, ArrowRight, Check, X, Utensils, Users, AlarmClock, Timer, Flame, LucideInfo, BarChart3, Dumbbell, Banana, CircleDashed } from 'lucide-react';
+import { ChefHat, Clock, ArrowRight, Check, X, Utensils, Users, AlarmClock, Timer, Flame, LucideInfo, BarChart3, Dumbbell, Banana, CircleDashed, Save } from 'lucide-react';
 import { useStore } from '../store';
 import { StarIcon } from '@heroicons/react/24/solid';
 
@@ -28,7 +28,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
   const [rating, setRating] = useState(0);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
-  const { currentAnalysis, setCurrentAnalysis } = useStore();
+  const { currentAnalysis, setCurrentAnalysis, addMealToHistory } = useStore();
 
   // Update selected ingredients when ingredients prop changes
   useEffect(() => {
@@ -199,7 +199,54 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
   const handleRating = (stars: number) => {
     setRating(stars);
     toast.success(`Rated ${stars} stars!`);
-    // Here you can add logic to save the rating
+  };
+
+  const handleSaveRecipe = () => {
+    if (!parsedRecipe) return;
+
+    // Determine cooking method based on recipe name and ingredients
+    const recipeName = parsedRecipe.name.toLowerCase();
+    let cookingMethod = 'Other';
+    
+    if (recipeName.includes('one-pot') || recipeName.includes('one pot')) {
+      cookingMethod = 'One-Pot';
+    } else if (recipeName.includes('stir') || recipeName.includes('fry')) {
+      cookingMethod = 'Stir Fry';
+    } else if (recipeName.includes('bake') || recipeName.includes('oven')) {
+      cookingMethod = 'Baked';
+    } else if (recipeName.includes('grill')) {
+      cookingMethod = 'Grilled';
+    } else if (recipeName.includes('slow') || recipeName.includes('crockpot')) {
+      cookingMethod = 'Slow Cooker';
+    } else if (recipeName.includes('instant') || recipeName.includes('pressure')) {
+      cookingMethod = 'Instant Pot';
+    } else if (recipeName.includes('sheet') || recipeName.includes('pan')) {
+      cookingMethod = 'Sheet Pan';
+    } else if (recipeName.includes('salad') || recipeName.includes('raw')) {
+      cookingMethod = 'No Cook';
+    } else {
+      cookingMethod = 'Stovetop';
+    }
+
+    // Parse time strings to numbers
+    const parseTime = (timeStr: string): number => {
+      const match = timeStr.match(/(\d+)/);
+      return match ? parseInt(match[1]) : 30;
+    };
+
+    const meal = {
+      recipeName: parsedRecipe.name,
+      ingredients: selectedIngredients,
+      prepTime: parseTime(parsedRecipe.prepTime),
+      cookTime: parseTime(parsedRecipe.cookTime),
+      servings: parseTime(parsedRecipe.servings),
+      rating: rating || 4,
+      cookingMethod,
+      difficulty: 'medium' as const,
+    };
+
+    addMealToHistory(meal);
+    toast.success('Recipe saved to your cooking history!');
   };
 
   // If no analysis, show an empty state
@@ -329,7 +376,8 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
           
           {/* Star Rating */}
           {recipe && (
-            <div className="flex space-x-1">
+            <div className="flex items-center space-x-2">
+              <div className="flex space-x-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
@@ -341,6 +389,14 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                   <StarIcon className="h-6 w-6" />
                 </button>
               ))}
+            </div>
+              <button
+                onClick={handleSaveRecipe}
+                className="ml-4 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm"
+              >
+                <Save className="w-4 h-4" />
+                Save Recipe
+              </button>
             </div>
           )}
         </div>
