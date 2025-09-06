@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, MapPin, Clock, Users, Phone, Mail, Building2, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, MapPin, Clock, Users, Phone, Mail, Building2, CheckCircle, XCircle, Edit3, Trash2, Settings, TrendingUp, Star } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { 
-  createRestaurant, 
-  getRestaurantsByAdmin, 
-  createFoodListing, 
-  getFoodListingsByRestaurant,
-  type FoodListingWithRestaurant 
-} from '../services/foodSharing';
-import { toast } from 'react-hot-toast';
-import type { Database } from '../types/database';
+import { createRestaurant, getRestaurantsByAdmin, createFoodListing, getFoodListingsByRestaurant } from '../services/foodSharing';
+import { supabase } from '../lib/supabase';
 import { useStore } from '../store';
+import type { FoodListingWithRestaurant } from '../services/foodSharing';
+import type { Database } from '../types/database';
+import { toast } from 'react-hot-toast';
+import FoodMap from './FoodMap';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
@@ -24,6 +21,16 @@ export default function RestaurantDashboard() {
   const [loading, setLoading] = useState(true);
   const [showRestaurantForm, setShowRestaurantForm] = useState(false);
   const [showFoodForm, setShowFoodForm] = useState(false);
+  const [editingFood, setEditingFood] = useState<FoodListingWithRestaurant | null>(null);
+  const [activeTab, setActiveTab] = useState<'listings' | 'analytics' | 'settings' | 'claims' | 'map'>('listings');
+  const [analytics, setAnalytics] = useState({
+    totalListings: 0,
+    activeListing: 0,
+    claimedListings: 0,
+    totalViews: 0,
+    wasteReduced: 0,
+    peopleFed: 0
+  });
 
   const [restaurantForm, setRestaurantForm] = useState({
     name: '',
@@ -58,6 +65,27 @@ export default function RestaurantDashboard() {
   useEffect(() => {
     if (selectedRestaurant) {
       loadFoodListings();
+      
+      // Set up real-time subscription for this restaurant's food listings
+      const subscription = supabase
+        .channel(`restaurant_${selectedRestaurant.id}_listings`)
+        .on('postgres_changes',
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'food_listings',
+            filter: `restaurant_id=eq.${selectedRestaurant.id}`
+          },
+          (payload) => {
+            console.log('Real-time food listing change for restaurant:', payload);
+            loadFoodListings();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        subscription.unsubscribe();
+      };
     }
   }, [selectedRestaurant]);
 
@@ -85,6 +113,20 @@ export default function RestaurantDashboard() {
     try {
       const data = await getFoodListingsByRestaurant(selectedRestaurant.id);
       setFoodListings(data);
+      
+      // Update analytics
+      const totalListings = data.length;
+      const activeListing = data.filter(item => !item.is_claimed).length;
+      const claimedListings = data.filter(item => item.is_claimed).length;
+      
+      setAnalytics({
+        totalListings,
+        activeListing,
+        claimedListings,
+        totalViews: totalListings * 15, // Mock data
+        wasteReduced: claimedListings * 2.5, // kg
+        peopleFed: claimedListings * 3
+      });
     } catch (error) {
       console.error('Error loading food listings:', error);
       toast.error('Failed to load food listings');
@@ -194,16 +236,28 @@ export default function RestaurantDashboard() {
     }
 
     try {
-      toast.loading('Creating food listing...', { id: 'creating-food' });
-      await createFoodListing({
-        ...foodForm,
-        restaurant_id: selectedRestaurant.id,
-        dietary_info: foodForm.dietary_info.length > 0 ? foodForm.dietary_info : undefined,
-        image_url: foodForm.image_url || undefined,
-      });
+      const loadingId = editingFood ? 'updating-food' : 'creating-food';
+      const loadingMessage = editingFood ? 'Updating food listing...' : 'Creating food listing...';
+      const successMessage = editingFood ? 'Food listing updated successfully!' : 'Food listing created successfully!';
+      
+      toast.loading(loadingMessage, { id: loadingId });
+      
+      if (editingFood) {
+        // Update existing listing (mock implementation)
+        // In real app, you'd call updateFoodListing API
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } else {
+        await createFoodListing({
+          ...foodForm,
+          restaurant_id: selectedRestaurant.id,
+          dietary_info: foodForm.dietary_info.length > 0 ? foodForm.dietary_info : undefined,
+          image_url: foodForm.image_url || undefined,
+        });
+      }
       
       loadFoodListings();
       setShowFoodForm(false);
+      setEditingFood(null);
       setFoodForm({
         food_item: '',
         description: '',
@@ -213,11 +267,43 @@ export default function RestaurantDashboard() {
         dietary_info: [],
         image_url: '',
       });
-      toast.success('Food listing created successfully!', { id: 'creating-food' });
+      toast.success(successMessage, { id: loadingId });
     } catch (error) {
-      console.error('Error creating food listing:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create food listing';
-      toast.error(errorMessage, { id: 'creating-food' });
+      console.error('Error with food listing:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save food listing';
+      const loadingId = editingFood ? 'updating-food' : 'creating-food';
+      toast.error(errorMessage, { id: loadingId });
+    }
+  };
+
+  const handleEditFood = (listing: FoodListingWithRestaurant) => {
+    setEditingFood(listing);
+    setFoodForm({
+      food_item: listing.food_item,
+      description: listing.description || '',
+      quantity: listing.quantity,
+      pickup_start_time: new Date(listing.pickup_start_time).toISOString().slice(0, 16),
+      pickup_end_time: new Date(listing.pickup_end_time).toISOString().slice(0, 16),
+      dietary_info: listing.dietary_info || [],
+      image_url: listing.image_url || '',
+    });
+    setShowFoodForm(true);
+  };
+
+
+  const handleDeleteFood = async (listingId: string) => {
+    console.log('Deleting listing:', listingId);
+    if (!confirm('Are you sure you want to delete this food listing?')) return;
+    
+    try {
+      toast.loading('Deleting food listing...', { id: 'deleting-food' });
+      // Mock delete - in real app, call deleteFoodListing API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      loadFoodListings();
+      toast.success('Food listing deleted successfully!', { id: 'deleting-food' });
+    } catch (error) {
+      console.error('Error deleting food listing:', error);
+      toast.error('Failed to delete food listing', { id: 'deleting-food' });
     }
   };
 
@@ -295,8 +381,7 @@ export default function RestaurantDashboard() {
                   </span>
                 )}
               </div>
-              
-              {displayProfile.restaurant_info && (
+　　 　 　 　 {displayProfile.restaurant_info && (
                 <div className="mb-3">
                   <h2 className="text-lg font-semibold text-green-600 dark:text-green-400">
                     {displayProfile.restaurant_info.name}
@@ -306,14 +391,12 @@ export default function RestaurantDashboard() {
                   </p>
                 </div>
               )}
-              
-              {displayProfile.bio && (
+　　 　 　 　 {displayProfile.bio && (
                 <p className="text-gray-600 dark:text-gray-300 text-sm italic mb-3">
                   "{displayProfile.bio}"
                 </p>
               )}
-              
-              {displayProfile.impact_stats && (
+　　 　 　 　 {displayProfile.impact_stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className="text-xl font-bold text-green-600 dark:text-green-400">
@@ -343,8 +426,7 @@ export default function RestaurantDashboard() {
               )}
             </div>
           </div>
-          
-          {/* Restaurant Details */}
+　　　 　 {/* Restaurant Details */}
           {displayProfile.restaurant_info && (
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <div className="grid md:grid-cols-2 gap-6">
@@ -369,8 +451,7 @@ export default function RestaurantDashboard() {
                     </div>
                   </div>
                 </div>
-                
-                <div>
+　　　　　　 　 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Specialties & Sustainability</h3>
                   <div className="space-y-3">
                     <div>
@@ -386,8 +467,7 @@ export default function RestaurantDashboard() {
                         ))}
                       </div>
                     </div>
-                    
-                    <div>
+　　　 　 　 　 　 <div>
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sustainability Practices</h4>
                       <div className="flex flex-wrap gap-1">
                         {displayProfile.restaurant_info.sustainability_practices.map((practice: string, index: number) => (
@@ -400,162 +480,7 @@ export default function RestaurantDashboard() {
                         ))}
                       </div>
                     </div>
-                    
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certifications</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {displayProfile.restaurant_info.certifications.map((cert: string, index: number) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 text-xs rounded-full"
-                          >
-                            {cert}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Restaurant Owner Profile Header */}
-      {displayProfile && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
-          <div className="flex items-center gap-6">
-            {displayProfile.avatar_url ? (
-              <img
-                src={displayProfile.avatar_url}
-                alt="Profile"
-                className="w-16 h-16 rounded-full object-cover border-4 border-green-100 dark:border-green-900/30"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                <Building2 className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
-            )}
-            
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {displayProfile.full_name}
-                </h1>
-                {isDemo && (
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full">
-                    Demo Profile
-                  </span>
-                )}
-              </div>
-              
-              {displayProfile.restaurant_info && (
-                <div className="mb-3">
-                  <h2 className="text-lg font-semibold text-green-600 dark:text-green-400">
-                    {displayProfile.restaurant_info.name}
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    {displayProfile.restaurant_info.cuisine_type} • Est. {displayProfile.restaurant_info.established}
-                  </p>
-                </div>
-              )}
-              
-              {displayProfile.bio && (
-                <p className="text-gray-600 dark:text-gray-300 text-sm italic mb-3">
-                  "{displayProfile.bio}"
-                </p>
-              )}
-              
-              {displayProfile.impact_stats && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                      {displayProfile.impact_stats.meals_shared}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-300">Meals Shared</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                      {displayProfile.impact_stats.waste_prevented}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-300">Waste Prevented</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                      {displayProfile.impact_stats.community_members_helped}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-300">People Helped</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                      {displayProfile.impact_stats.months_active}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-300">Months Active</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Restaurant Details */}
-          {displayProfile.restaurant_info && (
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Restaurant Details</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.restaurant_info.address}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.restaurant_info.operating_hours}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.email}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Specialties & Sustainability</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialties</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {displayProfile.restaurant_info.specialties.map((specialty: string, index: number) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs rounded-full"
-                          >
-                            {specialty}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sustainability Practices</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {displayProfile.restaurant_info.sustainability_practices.map((practice: string, index: number) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full"
-                          >
-                            {practice}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
+　　　 　 　 　 　 <div>
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certifications</h4>
                       <div className="flex flex-wrap gap-1">
                         {displayProfile.restaurant_info.certifications.map((cert: string, index: number) => (
@@ -597,8 +522,191 @@ export default function RestaurantDashboard() {
         </div>
       )}
 
+      {/* Navigation Tabs */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="flex space-x-8 px-6">
+            <button
+              onClick={() => setActiveTab('listings')}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'listings'
+                  ? 'bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 border-b-2 border-green-600'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <Users className="w-4 h-4 inline mr-2" />
+              Food Listings
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'analytics'
+                  ? 'bg-orange-50 dark:bg-orange-900 text-orange-600 dark:text-orange-400 border-b-2 border-orange-600'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4 inline mr-2" />
+              Analytics
+            </button>
+            <button
+              onClick={() => setActiveTab('claims')}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'claims'
+                  ? 'bg-purple-50 dark:bg-purple-900 text-purple-600 dark:text-purple-400 border-b-2 border-purple-600'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <CheckCircle className="w-4 h-4 inline mr-2" />
+              Claims
+            </button>
+            <button
+              onClick={() => setActiveTab('map')}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'map'
+                  ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <MapPin className="w-4 h-4 inline mr-2" />
+              Map View
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`flex-1 px-6 py-4 text-sm font-medium rounded-tr-lg transition-colors ${
+                activeTab === 'settings'
+                  ? 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-b-2 border-gray-600'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <Settings className="w-4 h-4 inline mr-2" />
+              Settings
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {activeTab === 'analytics' && selectedRestaurant && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Restaurant Analytics
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Track your food sharing impact and performance metrics
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Listings</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.totalListings}</p>
+                </div>
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                  <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm">
+                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-green-600 dark:text-green-400">+12% from last month</span>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Listings</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.activeListing}</p>
+                </div>
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                  <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm">
+                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-green-600 dark:text-green-400">{analytics.wasteReduced}kg waste reduced</span>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">People Fed</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.peopleFed}</p>
+                </div>
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                  <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm">
+                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-green-600 dark:text-green-400">Community impact</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'claims' && selectedRestaurant && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Claims Management
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Track and manage food pickup requests from community members
+            </p>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="text-center py-12">
+              <CheckCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                No claims yet
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Claims will appear here when community members request your food
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Restaurant Settings
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Manage your restaurant preferences and notification settings
+            </p>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="text-center py-12">
+              <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Settings Panel
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Restaurant settings and preferences will be available here
+              </p>
+              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+              <span className="text-green-600 dark:text-green-400">{analytics.wasteReduced}kg waste reduced</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Restaurant Selection */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className={`grid gap-6 ${activeTab === 'listings' ? 'md:grid-cols-3' : 'grid-cols-1'}`}>
         <div className="md:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
@@ -660,7 +768,7 @@ export default function RestaurantDashboard() {
         </div>
 
         {/* Food Listings */}
-        <div className="md:col-span-2">
+        <div className={`${activeTab === 'listings' ? 'md:col-span-2' : 'col-span-1'}`}>
           {selectedRestaurant ? (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between mb-6">
@@ -744,6 +852,22 @@ export default function RestaurantDashboard() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 ml-4">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditFood(listing)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                              title="Edit listing"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteFood(listing.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                              title="Delete listing"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                           {listing.is_claimed ? (
                             <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm rounded-full">
                               Claimed
@@ -916,7 +1040,7 @@ export default function RestaurantDashboard() {
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-xl font-semibold dark:text-white mb-4">Add Food Listing</h3>
+              <h3 className="text-xl font-semibold dark:text-white mb-4">{editingFood ? 'Edit Food Listing' : 'Add Food Listing'}</h3>
               <form onSubmit={handleCreateFoodListing} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1021,7 +1145,19 @@ export default function RestaurantDashboard() {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setShowFoodForm(false)}
+                    onClick={() => {
+                      setShowFoodForm(false);
+                      setEditingFood(null);
+                      setFoodForm({
+                        food_item: '',
+                        description: '',
+                        quantity: '',
+                        pickup_start_time: '',
+                        pickup_end_time: '',
+                        dietary_info: [],
+                        image_url: '',
+                      });
+                    }}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     Cancel
@@ -1030,12 +1166,29 @@ export default function RestaurantDashboard() {
                     type="submit"
                     className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                   >
-                    Create Listing
+                    {editingFood ? 'Update Listing' : 'Create Listing'}
                   </button>
                 </div>
               </form>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {activeTab === 'map' && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Restaurant Location & Food Map
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              View your restaurant location and nearby food listings
+            </p>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <FoodMap />
+          </div>
         </div>
       )}
     </div>

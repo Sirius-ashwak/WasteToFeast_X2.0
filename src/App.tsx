@@ -1,11 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
 import ImageUploader from './components/ImageUploader';
 import RecipeGenerator from './components/RecipeGenerator';
-import Dashboard from './components/Dashboard';
 import FoodSharingSection from './components/FoodSharingSection';
 import RestaurantDashboard from './components/RestaurantDashboard';
+import UserDashboard from './components/UserDashboard';
 import UserProfile from './components/UserProfile';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
@@ -18,9 +17,9 @@ import { toast } from 'react-hot-toast';
 
 function App() {
   const { isDarkMode, setCurrentAnalysis, initializeSampleData, mealHistory } = useStore();
-  const { isAuthenticated, isRestaurantAdmin, loading: authLoading, user, initialized } = useAuth();
+  const { isAuthenticated, isRestaurantAdmin, user, initialized } = useAuth();
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
-  const [currentView, setCurrentView] = useState<'home' | 'restaurant' | 'profile'>('home');
+  const [currentView, setCurrentView] = useState<'recipe-generator' | 'food-map' | 'profile'>('recipe-generator');
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Verify environment variables are set
@@ -65,16 +64,11 @@ function App() {
     }
   };
 
-  const handleViewChange = (view: 'home' | 'restaurant' | 'profile') => {
-    if (!isAuthenticated && initialized) {
-      setShowAuthModal(true);
-      return;
-    }
-    
-    // Only allow restaurant view for restaurant admins
-    if (view === 'restaurant' && !isRestaurantAdmin) {
-      toast.error('Restaurant admin access required');
-      return;
+  const handleViewChange = (view: 'recipe-generator' | 'food-map' | 'profile') => {
+    // Allow navigation to recipe-generator and food-map for everyone
+    // Only profile requires authentication check for full access
+    if (view === 'profile' && !isAuthenticated && initialized) {
+      // Profile will show auth modal, but allow navigation
     }
     
     setCurrentView(view);
@@ -83,10 +77,11 @@ function App() {
   // Set default view based on user role after authentication
   useEffect(() => {
     if (isAuthenticated && initialized) {
-      // Only auto-navigate if we're on home and user just logged in
-      if (currentView === 'home' && user) {
-        // Don't auto-navigate, let user stay on home page
-        // They can manually navigate to their profile/restaurant dashboard
+      // Auto-navigate to appropriate view based on role
+      if (currentView === 'profile' && user) {
+        // Stay on profile after login
+      } else if (currentView === 'food-map') {
+        // Stay on food-map, will show role-appropriate dashboard
       }
     }
   }, [isAuthenticated, isRestaurantAdmin, initialized, currentView, user]);
@@ -123,88 +118,90 @@ function App() {
 
   const renderCurrentView = () => {
     switch (currentView) {
-      case 'restaurant':
-        return isRestaurantAdmin ? <RestaurantDashboard /> : <UserProfile />;
-      case 'profile':
-        return <UserProfile />;
-      default:
+      case 'recipe-generator':
         return (
-          <>
-            <Hero />
-            
-            <div id="features" className="mt-12 mb-16">
-              <h2 className="text-3xl font-bold text-center mb-2">
-                Smart Kitchen Assistant
-              </h2>
-              <p className="text-center text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-                Scan your ingredients and instantly discover delicious recipes tailored to what you have on hand
+          <div className="space-y-8">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                AI Recipe Generator
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Transform your leftover ingredients into delicious meals with AI-powered recipe suggestions
               </p>
-              <div className="flex flex-col items-center gap-10 w-full max-w-4xl mx-auto">
-                <div className="w-full">
-                  <ImageUploader onAnalysisComplete={handleAnalysisComplete} />
-                </div>
-                <div id="recipes" className="w-full">
-                  <RecipeGenerator ingredients={analysisResult?.ingredients || []} />
-                </div>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+                <ImageUploader onAnalysisComplete={handleAnalysisComplete} />
               </div>
-            </div>
-            
-            <div id="dashboard">
-              <Dashboard />
-            </div>
-            
-            <div id="food-sharing" className="mt-16">
-              <FoodSharingSection />
-            </div>
-            
-            <div id="about" className="py-16 w-full max-w-7xl mx-auto">
-              <h2 className="text-3xl font-bold text-center mb-2">
-                About Waste to Feast
-              </h2>
-              <p className="text-center text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
-                Transforming leftover ingredients into delicious meals with AI-powered recipes
-              </p>
               
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:border dark:border-gray-700 transition-colors duration-200">
-                  <h3 className="text-xl font-bold mb-4 dark:text-gray-100">Our Mission</h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    At Waste to Feast, we're on a mission to reduce food waste by helping people transform leftover ingredients into delicious, nutritious meals. Our AI-powered platform suggests creative recipes based on the ingredients you already have.
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    By making it easier to use what you have on hand, we aim to help households save money, reduce their environmental footprint, and discover exciting new recipes they might never have tried otherwise.
-                  </p>
+              {analysisResult && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                  <RecipeGenerator ingredients={analysisResult.ingredients} />
                 </div>
-                
-                <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:border dark:border-gray-700 transition-colors duration-200">
-                  <h3 className="text-xl font-bold mb-4 dark:text-gray-100">How It Works</h3>
-                  <ul className="space-y-3 text-gray-600 dark:text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
-                      <p><span className="font-medium">Snap a photo</span> of your leftovers or ingredients</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
-                      <p><span className="font-medium">Our AI identifies</span> the ingredients in your image</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
-                      <p><span className="font-medium">Browse recipe suggestions</span> tailored to your ingredients</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5">4</div>
-                      <p><span className="font-medium">Generate a complete recipe</span> with detailed instructions and nutrition facts</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5">5</div>
-                      <p><span className="font-medium">Cook and enjoy</span> your creative, waste-reducing meal!</p>
-                    </li>
-                  </ul>
+              )}
+            </div>
+          </div>
+        );
+        
+      case 'food-map':
+        if (isAuthenticated && initialized) {
+          if (isRestaurantAdmin) {
+            return <RestaurantDashboard />;
+          } else {
+            return <UserDashboard />;
+          }
+        } else {
+          // Guest view-only food map
+          return (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                  Food Map
+                </h1>
+                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-4">
+                  Discover available food near you in real-time
+                </p>
+                <div className="bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 max-w-2xl mx-auto">
+                  <p className="text-yellow-800 dark:text-yellow-200">
+                    Sign in to claim food and access full features
+                  </p>
                 </div>
               </div>
+              
+              <div className="max-w-6xl mx-auto">
+                <FoodSharingSection />
+              </div>
             </div>
-          </>
-        );
+          );
+        }
+        
+      case 'profile':
+        if (isAuthenticated && initialized) {
+          return <UserProfile />;
+        } else {
+          // Guest profile - show auth modal
+          setShowAuthModal(true);
+          return (
+            <div className="text-center py-16">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Welcome to Waste to Feast
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+                Sign in or create an account to access your profile
+              </p>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors"
+              >
+                Sign In / Sign Up
+              </button>
+            </div>
+          );
+        }
+        
+      default:
+        return null;
     }
   };
 

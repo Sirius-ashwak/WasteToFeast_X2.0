@@ -20,15 +20,15 @@
     "@supabase/supabase-js": "^2.57.0",
     "@tailwindcss/typography": "^0.5.16",
     "framer-motion": "^11.18.2",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.3",
     "react-hot-toast": "^2.5.2",
+    "react-leaflet": "^4.2.1",
     "react-scroll": "^1.9.3",
     "recharts": "^2.12.2",
-    "react-leaflet": "^4.2.1",
-    "leaflet": "^1.9.4",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

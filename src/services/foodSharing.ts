@@ -24,7 +24,7 @@ export async function createRestaurant(restaurantData: {
   description?: string;
   restaurant_admin_id: string;
 }) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('restaurants')
     .insert(restaurantData)
     .select()
@@ -65,7 +65,7 @@ export async function createFoodListing(listingData: {
   dietary_info?: string[];
   image_url?: string;
 }) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('food_listings')
     .insert(listingData)
     .select()
@@ -123,7 +123,7 @@ export async function getFoodListingsByRestaurant(restaurantId: string) {
 export async function claimFoodListing(listingId: string, userId: string) {
   try {
     // First check if the listing exists and is available
-    const { data: listing, error: fetchError } = await supabase
+    const { data: listing, error: fetchError } = await (supabase as any)
       .from('food_listings')
       .select('*')
       .eq('id', listingId)
@@ -143,7 +143,7 @@ export async function claimFoodListing(listingId: string, userId: string) {
     }
 
     // Update the listing to mark as claimed
-    const { data: updatedListing, error: updateError } = await supabase
+    const { data: updatedListing, error: updateError } = await (supabase as any)
       .from('food_listings')
       .update({
         is_claimed: true,
@@ -165,7 +165,7 @@ export async function claimFoodListing(listingId: string, userId: string) {
     }
 
     // Create a claim record
-    const { data: claim, error: claimError } = await supabase
+    const { data: claim, error: claimError } = await (supabase as any)
       .from('claims')
       .insert({
         food_listing_id: listingId,
@@ -177,7 +177,7 @@ export async function claimFoodListing(listingId: string, userId: string) {
     if (claimError) {
       console.error('Error creating claim:', claimError);
       // Try to rollback the listing update
-      await supabase
+      await (supabase as any)
         .from('food_listings')
         .update({
           is_claimed: false,
@@ -228,7 +228,7 @@ export async function getUserClaims(userId: string) {
 }
 
 export async function markPickupCompleted(claimId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('claims')
     .update({
       pickup_completed: true,
@@ -266,7 +266,7 @@ export async function getFoodListingsNearLocation(
 ) {
   // This is a simplified distance calculation
   // For production, you might want to use PostGIS or a more accurate calculation
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('food_listings')
     .select(`
       *,
@@ -279,7 +279,7 @@ export async function getFoodListingsNearLocation(
   if (error) throw error;
 
   // Filter by distance on the client side (for simplicity)
-  const filtered = data?.filter((listing) => {
+  const filtered = data?.filter((listing: any) => {
     const restaurant = listing.restaurants;
     if (!restaurant) return false;
 
@@ -314,4 +314,92 @@ function calculateDistance(
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
   return distance;
+}
+
+// Statistics functions
+export async function getFoodSharingStats() {
+  try {
+    const [listingsResult, claimsResult, restaurantsResult] = await Promise.all([
+      (supabase as any).from('food_listings').select('id, is_claimed, created_at'),
+      (supabase as any).from('claims').select('id, created_at'),
+      (supabase as any).from('restaurants').select('id').eq('is_verified', true)
+    ]);
+
+    const totalListings = listingsResult.data?.length || 0;
+    const claimedListings = listingsResult.data?.filter((l: any) => l.is_claimed).length || 0;
+    const totalClaims = claimsResult.data?.length || 0;
+    const activeRestaurants = restaurantsResult.data?.length || 0;
+
+    // Calculate this month's stats
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    const thisMonthClaims = claimsResult.data?.filter(
+      (claim: any) => new Date(claim.created_at) >= startOfMonth
+    ).length || 0;
+
+    return {
+      totalListings,
+      availableListings: totalListings - claimedListings,
+      claimedListings,
+      totalClaims,
+      thisMonthClaims,
+      activeRestaurants
+    };
+  } catch (error) {
+    console.error('Error fetching food sharing stats:', error);
+    return {
+      totalListings: 0,
+      availableListings: 0,
+      claimedListings: 0,
+      totalClaims: 0,
+      thisMonthClaims: 0,
+      activeRestaurants: 0
+    };
+  }
+}
+
+export async function getRestaurantStats(restaurantAdminId: string) {
+  try {
+    const { data: restaurants } = await (supabase as any)
+      .from('restaurants')
+      .select('id')
+      .eq('restaurant_admin_id', restaurantAdminId);
+
+    const restaurantIds = restaurants?.map((r: any) => r.id) || [];
+    
+    if (restaurantIds.length === 0) {
+      return {
+        totalListings: 0,
+        activeListings: 0,
+        claimedListings: 0,
+        totalRestaurants: 0
+      };
+    }
+
+    const { data: listings } = await (supabase as any)
+      .from('food_listings')
+      .select('id, is_claimed, created_at')
+      .in('restaurant_id', restaurantIds);
+
+    const totalListings = listings?.length || 0;
+    const claimedListings = listings?.filter((l: any) => l.is_claimed).length || 0;
+    const activeListings = totalListings - claimedListings;
+
+    return {
+      totalListings,
+      activeListings,
+      claimedListings,
+      totalRestaurants: restaurantIds.length
+    };
+  } catch (error) {
+    console.error('Error fetching restaurant stats:', error);
+    return {
+      totalListings: 0,
+      activeListings: 0,
+      claimedListings: 0,
+      totalRestaurants: 0
+    };
+  }
 }
