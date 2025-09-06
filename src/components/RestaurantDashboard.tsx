@@ -66,22 +66,21 @@ export default function RestaurantDashboard() {
     if (selectedRestaurant) {
       loadFoodListings();
       
-      // Set up real-time subscription for this restaurant's food listings
-      const subscription = supabase
-        .channel(`restaurant_${selectedRestaurant.id}_listings`)
-        .on('postgres_changes',
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'food_listings',
-            filter: `restaurant_id=eq.${selectedRestaurant.id}`
-          },
-          (payload) => {
-            console.log('Real-time food listing change for restaurant:', payload);
-            loadFoodListings();
-          }
-        )
-        .subscribe();
+      // Set up real-time subscription for food listings
+    const subscription = supabase
+      .channel('restaurant_food_listings_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'food_listings' },
+        (payload) => {
+          console.log('🔔 RestaurantDashboard: Real-time food listing change:', payload);
+          console.log('🔄 RestaurantDashboard: Reloading food listings due to real-time update...');
+          // Reload food listings when any change occurs
+          loadFoodListings();
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 RestaurantDashboard: Food listings subscription status:', status);
+      });
 
       return () => {
         subscription.unsubscribe();

@@ -24,12 +24,15 @@ export default function UserDashboard() {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'food_listings' },
         (payload) => {
-          console.log('Real-time food listing change:', payload);
+          console.log('🔔 UserDashboard: Real-time food listing change:', payload);
+          console.log('🔄 UserDashboard: Reloading food listings due to real-time update...');
           // Reload food listings when any change occurs
           loadFoodListings();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 UserDashboard: Food listings subscription status:', status);
+      });
 
     // Also subscribe to restaurant changes (in case restaurant info updates)
     const restaurantSubscription = supabase
@@ -37,12 +40,15 @@ export default function UserDashboard() {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'restaurants' },
         (payload) => {
-          console.log('Real-time restaurant change:', payload);
+          console.log('🏪 UserDashboard: Real-time restaurant change:', payload);
+          console.log('🔄 UserDashboard: Reloading food listings due to restaurant update...');
           // Reload food listings to get updated restaurant info
           loadFoodListings();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 UserDashboard: Restaurant subscription status:', status);
+      });
 
     return () => {
       subscription.unsubscribe();
