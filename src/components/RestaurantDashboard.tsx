@@ -328,14 +328,14 @@ export default function RestaurantDashboard() {
 
   if (!isRestaurantAdmin) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6 pt-20">
         <div className="text-center py-12">
           <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             Restaurant Access Required
-          </h2>
+          </h3>
           <p className="text-gray-600 dark:text-gray-300">
-            You need to have a restaurant admin account to access this dashboard.
+            You need to be a restaurant admin to access this dashboard.
           </p>
         </div>
       </div>
@@ -344,7 +344,7 @@ export default function RestaurantDashboard() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6 pt-20">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
         </div>
@@ -353,7 +353,7 @@ export default function RestaurantDashboard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 pt-20">
       {/* Restaurant Owner Profile Header */}
       {displayProfile && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">

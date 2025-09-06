@@ -1,24 +1,19 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Search, Filter, Clock, Users, Star, Camera } from 'lucide-react';
+import { MapPin, Search, Filter, Clock, Users, Star } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { getAvailableFoodListings } from '../services/foodSharing';
 import { supabase } from '../lib/supabase';
 import type { FoodListingWithRestaurant } from '../services/foodSharing';
 import FoodMap from './FoodMap';
-import RecipeGenerator from './RecipeGenerator';
-import type { AIAnalysisResult } from '../types';
-import ImageUploader from './ImageUploader';
 import { toast } from 'react-hot-toast';
 
 export default function UserDashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'find-food' | 'recipe-generator'>('find-food');
   const [foodListings, setFoodListings] = useState<FoodListingWithRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDistance, setFilterDistance] = useState<number>(10);
-  const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
 
   useEffect(() => {
     loadFoodListings();
@@ -58,21 +53,16 @@ export default function UserDashboard() {
   const loadFoodListings = async () => {
     try {
       setLoading(true);
+      console.log('🔄 UserDashboard: Loading food listings...');
       // Get user location first, then fetch nearby listings
       const listings = await getAvailableFoodListings();
+      console.log('📊 UserDashboard: Received listings:', listings.length);
       setFoodListings(listings);
     } catch (error) {
-      console.error('Error loading food listings:', error);
+      console.error('❌ UserDashboard: Error loading food listings:', error);
       toast.error('Failed to load food listings');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAnalysisComplete = (result: AIAnalysisResult) => {
-    setAnalysisResult(result);
-    if (result.ingredients.length > 0) {
-      toast.success(`Found ${result.ingredients.length} ingredients!`);
     }
   };
 
@@ -92,7 +82,7 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800 p-6 pt-20">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -143,36 +133,22 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Main Content - Food Discovery */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-8">
-          <div className="flex border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setActiveTab('find-food')}
-              className={`flex-1 px-6 py-4 text-sm font-medium rounded-tl-lg transition-colors ${
-                activeTab === 'find-food'
-                  ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <MapPin className="w-4 h-4 inline mr-2" />
-              Find Food Near Me
-            </button>
-            <button
-              onClick={() => setActiveTab('recipe-generator')}
-              className={`flex-1 px-6 py-4 text-sm font-medium rounded-tr-lg transition-colors ${
-                activeTab === 'recipe-generator'
-                  ? 'bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 border-b-2 border-green-600'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <Camera className="w-4 h-4 inline mr-2" />
-              Recipe Generator
-            </button>
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-2">
+              <MapPin className="w-5 h-5 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Find Food Near Me
+              </h2>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300">
+              Discover available food from local restaurants and help reduce waste
+            </p>
           </div>
 
           <div className="p-6">
-            {activeTab === 'find-food' ? (
-              <div className="space-y-6">
+            <div className="space-y-6">
                 {/* Search and Filters */}
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1">
@@ -294,29 +270,7 @@ export default function UserDashboard() {
                     ))
                   )}
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    AI Recipe Generator
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Scan your ingredients and get personalized recipe suggestions
-                  </p>
-                </div>
-                
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                  <ImageUploader onAnalysisComplete={handleAnalysisComplete} />
-                </div>
-                
-                {analysisResult && (
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <RecipeGenerator ingredients={analysisResult.ingredients} />
-                  </div>
-                )}
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

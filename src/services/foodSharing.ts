@@ -65,18 +65,24 @@ export async function createFoodListing(listingData: {
   dietary_info?: string[];
   image_url?: string;
 }) {
+  console.log('🍽️ Creating food listing:', listingData);
   const { data, error } = await (supabase as any)
     .from('food_listings')
     .insert(listingData)
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('❌ Error creating food listing:', error);
+    throw error;
+  }
+  console.log('✅ Food listing created successfully:', data);
   return data;
 }
 
 export async function getAvailableFoodListings() {
   try {
+    console.log('🔍 Fetching available food listings...');
     const { data, error } = await supabase
       .from('food_listings')
       .select(`
@@ -88,18 +94,22 @@ export async function getAvailableFoodListings() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching food listings:', error);
+      console.error('❌ Error fetching food listings:', error);
       return [];
     }
+    
+    console.log('✅ Found food listings:', data?.length || 0);
+    console.log('📋 Food listings data:', data);
     return (data || []) as FoodListingWithRestaurant[];
   } catch (error) {
-    console.error('Error in getAvailableFoodListings:', error);
+    console.error('❌ Error in getAvailableFoodListings:', error);
     return [];
   }
 }
 
 export async function getFoodListingsByRestaurant(restaurantId: string) {
   try {
+    console.log('🔍 Fetching food listings by restaurant...');
     const { data, error } = await supabase
       .from('food_listings')
       .select(`

@@ -227,7 +227,7 @@ function App() {
         onViewChange={handleViewChange}
         onAuthClick={() => setShowAuthModal(true)}
       />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 w-full">
         <AnimatePresence mode="wait">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
