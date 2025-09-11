@@ -662,8 +662,9 @@ export default function RestaurantDashboard() {
       )}
 
       {/* Restaurant Selection */}
-      <div className={`grid gap-6 ${activeTab === 'listings' ? 'md:grid-cols-3' : 'grid-cols-1'}`}>
-        <div className="md:col-span-1">
+      <div className="grid gap-6 lg:grid-cols-4">
+        {/* Restaurant List - Always visible */}
+        <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold dark:text-white">My Restaurants</h2>
@@ -724,7 +725,7 @@ export default function RestaurantDashboard() {
         </div>
 
         {/* Food Listings */}
-        <div className={`${activeTab === 'listings' ? 'md:col-span-2' : 'col-span-1'}`}>
+        <div className="lg:col-span-3">
           {selectedRestaurant ? (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between mb-6">
@@ -754,76 +755,33 @@ export default function RestaurantDashboard() {
                   <p className="text-gray-600 dark:text-gray-300 mb-4">
                     Start sharing your excess food with the community
                   </p>
-                  <button
+                  <ActionButton
                     onClick={() => setShowFoodForm(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
+                    variant="primary"
                   >
                     Create First Listing
-                  </button>
+                  </ActionButton>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 auto-rows-min">
                   {foodListings.map((listing) => (
                     <div
                       key={listing.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-4 h-fit"
                     >
+                      {/* Header Section */}
                       <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg dark:text-white">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-lg dark:text-white truncate">
                             {listing.food_item}
                           </h3>
                           {listing.description && (
-                            <p className="text-gray-600 dark:text-gray-300 mt-1">
+                            <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm">
                               {listing.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-4 mt-3 text-sm text-gray-600 dark:text-gray-300">
-                            <span className="flex items-center gap-1">
-                              <Users className="w-4 h-4" />
-                              {listing.quantity}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {new Date(listing.pickup_start_time).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })} - {new Date(listing.pickup_end_time).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </span>
-                          </div>
-                          {listing.dietary_info && listing.dietary_info.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {listing.dietary_info.map((info, index) => (
-                                <span
-                                  key={index}
-                                  className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full"
-                                >
-                                  {info}
-                                </span>
-                              ))}
-                            </div>
-                          )}
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleEditFood(listing)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                              title="Edit listing"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteFood(listing.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                              title="Delete listing"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                        <div className="flex-shrink-0 ml-3">
                           {listing.is_claimed ? (
                             <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm rounded-full">
                               Claimed
@@ -834,6 +792,53 @@ export default function RestaurantDashboard() {
                             </span>
                           )}
                         </div>
+                      </div>
+
+                      {/* Details Section */}
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          <span>Qty: {listing.quantity}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          <span>
+                            {new Date(listing.pickup_start_time).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })} - {new Date(listing.pickup_end_time).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </span>
+                        </span>
+                      </div>
+
+                      {/* Dietary Info Section */}
+                      {listing.dietary_info && listing.dietary_info.length > 0 && (
+                        <div>
+                          <BadgeList badges={listing.dietary_info} />
+                        </div>
+                      )}
+
+                      {/* Actions Section */}
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <ActionButton
+                          onClick={() => handleEditFood(listing)}
+                          variant="outline"
+                          size="sm"
+                          icon={<Edit3 className="w-4 h-4" />}
+                        >
+                          Edit
+                        </ActionButton>
+                        <ActionButton
+                          onClick={() => handleDeleteFood(listing.id)}
+                          variant="outline"
+                          size="sm"
+                          icon={<Trash2 className="w-4 h-4" />}
+                        >
+                          Delete
+                        </ActionButton>
                       </div>
                     </div>
                   ))}
