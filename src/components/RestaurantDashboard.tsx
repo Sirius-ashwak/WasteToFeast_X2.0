@@ -57,6 +57,16 @@ export default function RestaurantDashboard() {
     image_url: '',
   });
 
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    foodId: string | null;
+    foodName: string;
+  }>({
+    isOpen: false,
+    foodId: null,
+    foodName: '',
+  });
+
   useEffect(() => {
     if (user && isRestaurantAdmin) {
       loadRestaurants();
@@ -297,8 +307,20 @@ export default function RestaurantDashboard() {
 
   const handleDeleteFood = async (listingId: string) => {
     console.log('Deleting listing:', listingId);
-    if (!confirm('Are you sure you want to delete this food listing?')) return;
+    const listing = foodListings.find(l => l.id === listingId);
+    if (!listing) return;
     
+    setDeleteDialog({
+      isOpen: true,
+      foodId: listingId,
+      foodName: listing.food_item,
+    });
+  };
+
+  const confirmDeleteFood = async () => {
+    const { foodId } = deleteDialog;
+    if (!foodId) return;
+
     try {
       toast.loading('Deleting food listing...', { id: 'deleting-food' });
       // Mock delete - in real app, call deleteFoodListing API
@@ -308,6 +330,8 @@ export default function RestaurantDashboard() {
     } catch (error) {
       console.error('Error deleting food listing:', error);
       toast.error('Failed to delete food listing', { id: 'deleting-food' });
+    } finally {
+      setDeleteDialog({ isOpen: false, foodId: null, foodName: '' });
     }
   };
 
@@ -1127,6 +1151,16 @@ export default function RestaurantDashboard() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onCancel={() => setDeleteDialog({ isOpen: false, foodId: null, foodName: '' })}
+        onConfirm={confirmDeleteFood}
+        title="Delete Food Listing"
+        message={`Are you sure you want to delete "${deleteDialog.foodName}"? This action cannot be undone.`}
+        type="danger"
+      />
     </div>
   );
 }
