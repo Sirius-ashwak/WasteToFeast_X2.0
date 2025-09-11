@@ -6,6 +6,9 @@ import { useAuth } from '../hooks/useAuth';
 import { getUserClaims, markPickupCompleted, type ClaimWithDetails } from '../services/foodSharing';
 import { toast } from 'react-hot-toast';
 import { useStore } from '../store';
+import ProfileCard from './ProfileCard';
+// import LanguageSelector from './LanguageSelector';
+// import { HuggingFaceTranslationService } from '../services/translationService';
 
 export default function UserProfile() {
   const { user, profile, updateProfile, loading: authLoading, profileLoading, isRestaurantAdmin, initialized } = useAuth();
@@ -17,6 +20,38 @@ export default function UserProfile() {
     full_name: profile?.full_name || '',
     phone: profile?.phone || '',
   });
+  
+  // Translation state - TEMPORARILY DISABLED
+  // const [selectedLanguage, setSelectedLanguage] = useState('en');
+  // const [isTranslating, setIsTranslating] = useState(false);
+  // const [translatedContent, setTranslatedContent] = useState<{
+  //   fullName?: string;
+  //   cuisines?: string;
+  //   cookingLevel?: string;
+  //   heroTitle?: string;
+  //   heroSubtitle?: string;
+  //   profileTitle?: string;
+  //   statsTitle?: string;
+  //   activityTitle?: string;
+  // }>({});
+  
+  // Initialize translation service - TEMPORARILY DISABLED
+  // const [translationService] = useState(() => {
+  //   try {
+  //     return new HuggingFaceTranslationService();
+  //   } catch (error) {
+  //     console.error('Failed to initialize translation service:', error);
+  //     return null;
+  //   }
+  // });
+
+  // Translation functionality - TEMPORARILY DISABLED
+  // const handleLanguageChange = async (languageCode: string) => { ... };
+
+  // Get display text - TEMPORARILY DISABLED
+  const getDisplayText = (originalText: string, translatedKey?: string): string => {
+    return originalText; // Always return original text when translation is disabled
+  };
 
   useEffect(() => {
     if (user) {
@@ -116,7 +151,6 @@ export default function UserProfile() {
 
   // Calculate statistics
   const completedClaims = claims.filter(claim => claim.pickup_completed);
-  const pendingClaims = claims.filter(claim => !claim.pickup_completed);
   const totalMealsRescued = claims.length;
   const completionRate = claims.length > 0 ? Math.round((completedClaims.length / claims.length) * 100) : 0;
 
@@ -158,156 +192,161 @@ export default function UserProfile() {
   }
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          My Profile
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300">
-          Manage your account and view your food rescue activity
-        </p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            {getDisplayText('My Profile', 'profileTitle')}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            {getDisplayText('Manage your account and view your food rescue activity', 'heroSubtitle')}
+          </p>
+        </div>
+        
+        {/* Language Selector - TEMPORARILY DISABLED */}
+        {/* {translationService?.isAvailable() && (
+          <LanguageSelector
+            currentLanguage={selectedLanguage}
+            onLanguageChange={handleLanguageChange}
+            disabled={isTranslating}
+            className="flex-shrink-0"
+          />
+        )} */}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Profile Information */}
+        {/* Profile Card */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <div className="text-center mb-6">
-              {displayProfile?.avatar_url ? (
-                <img
-                  src={displayProfile.avatar_url}
-                  alt="Profile"
-                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-4 border-green-100 dark:border-green-900/30"
-                />
-              ) : (
-                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-10 h-10 text-green-600 dark:text-green-400" />
+          <ProfileCard
+            avatarUrl={displayProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayProfile?.full_name || displayProfile?.username || 'User')}&background=10b981&color=fff&size=400`}
+            name={getDisplayText(displayProfile?.full_name || displayProfile?.username || 'User', 'fullName')}
+            title={`${displayProfile?.role === 'restaurant_admin' ? 'Restaurant Admin' : 'Community Member'}${isDemo ? ' (Demo)' : ''}`}
+            handle={displayProfile?.username || 'user'}
+            status={`${totalMealsRescued} meals rescued`}
+            contactText="Edit Profile"
+            showUserInfo={true}
+            enableTilt={true}
+            enableMobileTilt={false}
+            onContactClick={() => !isDemo && setEditingProfile(true)}
+          />
+
+          {/* Edit Profile Modal */}
+          {editingProfile && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                <h3 className="text-lg font-semibold dark:text-white mb-4">Edit Profile</h3>
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.full_name}
+                      onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={profileForm.phone}
+                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingProfile(false)}
+                      className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Profile Details */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-6">
+            <h3 className="text-lg font-semibold dark:text-white mb-4">
+              {getDisplayText('Profile Details', 'profileDetailsTitle')}
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                <Mail className="w-5 h-5" />
+                <span>{user?.email || displayProfile?.email}</span>
+              </div>
+              {displayProfile?.phone && (
+                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                  <Phone className="w-5 h-5" />
+                  <span>{displayProfile.phone}</span>
                 </div>
               )}
-              <h2 className="text-xl font-semibold dark:text-white">
-                {displayProfile?.full_name || displayProfile?.username || 'User'}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300">@{displayProfile?.username}</p>
-              {isDemo && (
-                <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full mt-1 mr-2">
-                  Demo Profile
-                </span>
+              {displayProfile?.location && (
+                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                  <MapPin className="w-5 h-5" />
+                  <span>{displayProfile.location}</span>
+                </div>
               )}
-              <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-full mt-2">
-                {displayProfile?.role === 'restaurant_admin' ? 'Restaurant Admin' : 'Community Member'}
-              </span>
+              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                <Calendar className="w-5 h-5" />
+                <span>Joined {formatDate(displayProfile?.created_at || '')}</span>
+              </div>
               
-              {/* User Bio */}
+              {/* Bio */}
               {displayProfile?.bio && (
-                <p className="text-gray-600 dark:text-gray-300 mt-3 text-sm italic">
-                  "{displayProfile.bio}"
-                </p>
+                <div>
+                  <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</h4>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm italic">
+                    "{getDisplayText(displayProfile.bio, 'bio')}"
+                  </p>
+                </div>
+              )}
+              
+              {/* Additional Profile Info */}
+              {displayProfile?.favorite_cuisines && (
+                <div>
+                  <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Favorite Cuisines</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {displayProfile.favorite_cuisines.map((cuisine: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs rounded-full"
+                      >
+                        {cuisine}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {displayProfile?.cooking_level && (
+                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                  <ChefHat className="w-5 h-5" />
+                  <span>Cooking Level: {getDisplayText(displayProfile.cooking_level, 'cookingLevel')}</span>
+                </div>
               )}
             </div>
-
-            {editingProfile ? (
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={profileForm.full_name}
-                    onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={profileForm.phone}
-                    onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingProfile(false)}
-                    className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                  <Mail className="w-5 h-5" />
-                  <span>{user?.email || displayProfile?.email}</span>
-                </div>
-                {displayProfile?.phone && (
-                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                    <Phone className="w-5 h-5" />
-                    <span>{displayProfile.phone}</span>
-                  </div>
-                )}
-                {displayProfile?.location && (
-                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                    <MapPin className="w-5 h-5" />
-                    <span>{displayProfile.location}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                  <Calendar className="w-5 h-5" />
-                  <span>Joined {formatDate(displayProfile?.created_at || '')}</span>
-                </div>
-                
-                {/* Additional Profile Info */}
-                {displayProfile?.favorite_cuisines && (
-                  <div>
-                    <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Favorite Cuisines</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {displayProfile.favorite_cuisines.map((cuisine: string, index: number) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs rounded-full"
-                        >
-                          {cuisine}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {displayProfile?.cooking_level && (
-                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                    <ChefHat className="w-5 h-5" />
-                    <span>Cooking Level: {displayProfile.cooking_level}</span>
-                  </div>
-                )}
-                
-                {!isDemo && (
-                  <button
-                    onClick={() => setEditingProfile(true)}
-                    className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    Edit Profile
-                  </button>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Statistics */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-6">
-            <h3 className="text-lg font-semibold dark:text-white mb-4">Impact Statistics</h3>
+            <h3 className="text-lg font-semibold dark:text-white mb-4">
+              {getDisplayText('Impact Statistics', 'statsTitle')}
+            </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -352,7 +391,7 @@ export default function UserProfile() {
         <div className="lg:col-span-2">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h3 className="text-xl font-semibold dark:text-white mb-6">
-              {isRestaurantAdmin ? 'Community Impact' : 'My Food Claims'}
+              {isRestaurantAdmin ? 'Community Impact' : getDisplayText('My Food Claims', 'activityTitle')}
             </h3>
             
             {claims.length === 0 ? (
