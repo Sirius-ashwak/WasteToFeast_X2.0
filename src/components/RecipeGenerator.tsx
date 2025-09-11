@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { generateRecipe } from '../services/ai';
-import { ChefHat, Clock, ArrowRight, Check, X, Utensils, Users, AlarmClock, Timer, Flame, LucideInfo, BarChart3, Dumbbell, Banana, CircleDashed, Save } from 'lucide-react';
+import { youtubeService, type YouTubeVideo } from '../services/youtube';
+import { ChefHat, Clock, ArrowRight, Check, X, Utensils, Users, AlarmClock, Timer, Flame, LucideInfo, BarChart3, Dumbbell, Banana, CircleDashed, Save, Play } from 'lucide-react';
 import { useStore } from '../store';
 import { StarIcon } from '@heroicons/react/24/solid';
+import VideoCard from './VideoCard';
+// import LanguageSelector from './LanguageSelector';
+// import { HuggingFaceTranslationService } from '../services/translationService';
 
 interface Props {
   ingredients: string[];
@@ -28,6 +32,12 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
   const [rating, setRating] = useState(0);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  // const [translationService] = useState(() => new HuggingFaceTranslationService());
+  // const [selectedLanguage, setSelectedLanguage] = useState('en');
+  // const [isTranslating, setIsTranslating] = useState(false);
+  // const [translatedRecipe, setTranslatedRecipe] = useState<ParsedRecipe | null>(null);
   const { currentAnalysis, setCurrentAnalysis, addMealToHistory } = useStore();
 
   // Update selected ingredients when ingredients prop changes
@@ -155,6 +165,36 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
     }
   };
 
+  // Function to search for cooking videos
+  const searchCookingVideos = async (recipeText: string, dishName?: string) => {
+    try {
+      setLoadingVideos(true);
+      
+      // Extract recipe name from the generated text or use dish name
+      let recipeName = dishName || 'recipe';
+      if (recipeText) {
+        const nameMatch = recipeText.match(/Recipe Name:?\s*([^\n]+)/i);
+        if (nameMatch && nameMatch[1]) {
+          recipeName = nameMatch[1].trim();
+        }
+      }
+
+      // Search for cooking videos
+      const videoResults = await youtubeService.searchCookingVideos(
+        recipeName, 
+        selectedIngredients.slice(0, 3), // Use first 3 ingredients for better search
+        6 // Get 6 videos
+      );
+
+      setVideos(videoResults.videos);
+    } catch (error) {
+      console.error('Error searching cooking videos:', error);
+      // Don't show error toast as videos are supplementary content
+    } finally {
+      setLoadingVideos(false);
+    }
+  };
+
   const handleGenerateRecipe = async (specificDish?: string) => {
     if (!selectedIngredients || selectedIngredients.length === 0) {
       toast.error('Please select at least one ingredient');
@@ -184,6 +224,9 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
           generatedRecipe: generatedRecipe
         });
       }
+      
+      // Search for cooking videos after recipe generation
+      searchCookingVideos(generatedRecipe, specificDish);
       
       toast.success('Recipe generated successfully!');
     } catch (error) {
@@ -687,6 +730,63 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">{recipe}</pre>
                 </div>
               </details>
+            </motion.div>
+          )}
+
+          {/* YouTube Cooking Videos Section */}
+          {(videos.length > 0 || loadingVideos) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mt-8"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <Play className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Cooking Videos
+                </h3>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Learn how to make this recipe
+                </div>
+              </div>
+
+              {loadingVideos ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, index) => (
+                    <div key={index} className="bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse">
+                      <div className="aspect-video bg-gray-300 dark:bg-gray-600 rounded-t-lg"></div>
+                      <div className="p-4 space-y-2">
+                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-2/3"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {videos.map((video, index) => (
+                    <motion.div
+                      key={video.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                    >
+                      <VideoCard video={video} />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {videos.length === 0 && !loadingVideos && (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <Play className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No cooking videos found for this recipe</p>
+                </div>
+              )}
             </motion.div>
           )}
         </motion.div>
