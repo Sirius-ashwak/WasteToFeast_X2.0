@@ -9,6 +9,11 @@ import type { FoodListingWithRestaurant } from '../services/foodSharing';
 import type { Database } from '../types/database';
 import { toast } from 'react-hot-toast';
 import FoodMap from './FoodMap';
+import TabNavigation from './TabNavigation';
+import StatsCard from './StatsCard';
+import ActionButton from './ActionButton';
+import ConfirmDialog from './ConfirmDialog';
+import BadgeList from './BadgeList';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
@@ -522,67 +527,19 @@ export default function RestaurantDashboard() {
       )}
 
       {/* Navigation Tabs */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex space-x-8 px-6">
-            <button
-              onClick={() => setActiveTab('listings')}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'listings'
-                  ? 'bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 border-b-2 border-green-600'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <Users className="w-4 h-4 inline mr-2" />
-              Food Listings
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'analytics'
-                  ? 'bg-orange-50 dark:bg-orange-900 text-orange-600 dark:text-orange-400 border-b-2 border-orange-600'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <TrendingUp className="w-4 h-4 inline mr-2" />
-              Analytics
-            </button>
-            <button
-              onClick={() => setActiveTab('claims')}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'claims'
-                  ? 'bg-purple-50 dark:bg-purple-900 text-purple-600 dark:text-purple-400 border-b-2 border-purple-600'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <CheckCircle className="w-4 h-4 inline mr-2" />
-              Claims
-            </button>
-            <button
-              onClick={() => setActiveTab('map')}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'map'
-                  ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <MapPin className="w-4 h-4 inline mr-2" />
-              Map View
-            </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`flex-1 px-6 py-4 text-sm font-medium rounded-tr-lg transition-colors ${
-                activeTab === 'settings'
-                  ? 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-b-2 border-gray-600'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <Settings className="w-4 h-4 inline mr-2" />
-              Settings
-            </button>
-          </nav>
-        </div>
-      </div>
+      <TabNavigation
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
+        tabs={[
+          { id: 'listings', label: 'Food Listings', icon: <Users className="w-4 h-4" /> },
+          { id: 'analytics', label: 'Analytics', icon: <TrendingUp className="w-4 h-4" /> },
+          { id: 'claims', label: 'Claims', icon: <CheckCircle className="w-4 h-4" /> },
+          { id: 'map', label: 'Map View', icon: <MapPin className="w-4 h-4" /> },
+          { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> }
+        ]}
+        variant="underline"
+        className="mb-6"
+      />
 
       {activeTab === 'analytics' && selectedRestaurant && (
         <div className="space-y-6">
@@ -755,13 +712,13 @@ export default function RestaurantDashboard() {
                     {foodListings.length} listings
                   </p>
                 </div>
-                <button
+                <ActionButton
                   onClick={() => setShowFoodForm(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  variant="primary"
+                  icon={<Plus className="w-4 h-4" />}
                 >
-                  <Plus className="w-5 h-5" />
                   Add Food
-                </button>
+                </ActionButton>
               </div>
 
               {foodListings.length === 0 ? (
@@ -986,19 +943,21 @@ export default function RestaurantDashboard() {
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <button
+                  <ActionButton
                     type="button"
                     onClick={() => setShowRestaurantForm(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    variant="outline"
+                    className="flex-1"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </ActionButton>
+                  <ActionButton
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    variant="primary"
+                    className="flex-1"
                   >
                     Create Restaurant
-                  </button>
+                  </ActionButton>
                 </div>
               </form>
             </div>
@@ -1118,7 +1077,7 @@ export default function RestaurantDashboard() {
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <button
+                  <ActionButton
                     type="button"
                     onClick={() => {
                       setShowFoodForm(false);
@@ -1133,16 +1092,18 @@ export default function RestaurantDashboard() {
                         image_url: '',
                       });
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    variant="outline"
+                    className="flex-1"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </ActionButton>
+                  <ActionButton
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    variant="primary"
+                    className="flex-1"
                   >
                     {editingFood ? 'Update Listing' : 'Create Listing'}
-                  </button>
+                  </ActionButton>
                 </div>
               </form>
             </div>
