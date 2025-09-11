@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { User, MapPin, Clock, CheckCircle, Phone, Mail, Calendar, Utensils, Award, TrendingUp } from 'lucide-react';
 import { ChefHat } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { getUserClaims, markPickupCompleted, type ClaimWithDetails } from '../services/foodSharing';
+import { getUserClaims, markPickupCompleted, ClaimWithDetails } from '../services/foodSharing';
 import { toast } from 'react-hot-toast';
 import { useStore } from '../store';
 import ProfileCard from './ProfileCard';
@@ -49,15 +49,33 @@ export default function UserProfile() {
   // const handleLanguageChange = async (languageCode: string) => { ... };
 
   // Get display text - TEMPORARILY DISABLED
-  const getDisplayText = (originalText: string, translatedKey?: string): string => {
+  const getDisplayText = (originalText: string): string => {
     return originalText; // Always return original text when translation is disabled
   };
+
+  // Safe accessor functions for profile properties
+  const getProfileProperty = (property: string) => {
+    if (!displayProfile) return null;
+    if (property in displayProfile) return (displayProfile as any)[property];
+    return null;
+  };
+
+  const getProfileAvatar = () => getProfileProperty('avatar_url') || getProfileProperty('avatar');
+  const getProfileName = () => getProfileProperty('full_name') || getProfileProperty('name') || getProfileProperty('username');
+  const getProfileUsername = () => getProfileProperty('username') || 'user';
+  const getProfileEmail = () => getProfileProperty('email');
+  const getProfilePhone = () => getProfileProperty('phone');
+  const getProfileLocation = () => getProfileProperty('location');
+  const getProfileCreatedAt = () => getProfileProperty('created_at');
+  const getProfileBio = () => getProfileProperty('bio');
+  const getProfileFavoriteCuisines = () => getProfileProperty('favorite_cuisines');
+  const getProfileCookingLevel = () => getProfileProperty('cooking_level');
 
   useEffect(() => {
     if (user) {
       loadUserClaims();
       // Initialize demo profiles if not already done
-      if (!demoProfiles.user) {
+      if (!demoProfiles.find(p => p.role === 'user')) {
         initializeDemoProfiles();
       }
     } else {
@@ -155,8 +173,9 @@ export default function UserProfile() {
   const completionRate = claims.length > 0 ? Math.round((completedClaims.length / claims.length) * 100) : 0;
 
   // Use demo profile data if available
-  const displayProfile = profile || (user ? demoProfiles.user : null);
-  const isDemo = !profile && !!demoProfiles.user;
+  const userDemoProfile = demoProfiles.find(p => p.role === 'user');
+  const displayProfile = profile || (user ? userDemoProfile : null);
+  const isDemo = !profile && !!userDemoProfile;
 
   // Show loading if not initialized or still loading
   if (!initialized || authLoading || profileLoading || (loading && user)) {
@@ -195,10 +214,10 @@ export default function UserProfile() {
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {getDisplayText('My Profile', 'profileTitle')}
+            {getDisplayText('My Profile')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            {getDisplayText('Manage your account and view your food rescue activity', 'heroSubtitle')}
+            {getDisplayText('Manage your account and view your food rescue activity')}
           </p>
         </div>
         
@@ -217,10 +236,10 @@ export default function UserProfile() {
         {/* Profile Card */}
         <div className="lg:col-span-1">
           <ProfileCard
-            avatarUrl={displayProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayProfile?.full_name || displayProfile?.username || 'User')}&background=10b981&color=fff&size=400`}
-            name={getDisplayText(displayProfile?.full_name || displayProfile?.username || 'User', 'fullName')}
+            avatarUrl={getProfileAvatar() || `https://ui-avatars.com/api/?name=${encodeURIComponent(getProfileName() || 'User')}&background=10b981&color=fff&size=400`}
+            name={getDisplayText(getProfileName() || 'User')}
             title={`${displayProfile?.role === 'restaurant_admin' ? 'Restaurant Admin' : 'Community Member'}${isDemo ? ' (Demo)' : ''}`}
-            handle={displayProfile?.username || 'user'}
+            handle={getProfileUsername()}
             status={`${totalMealsRescued} meals rescued`}
             contactText="Edit Profile"
             showUserInfo={true}
@@ -282,61 +301,44 @@ export default function UserProfile() {
           {/* Profile Details */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-6">
             <h3 className="text-lg font-semibold dark:text-white mb-4">
-              {getDisplayText('Profile Details', 'profileDetailsTitle')}
+              {getDisplayText('Profile Details')}
             </h3>
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                 <Mail className="w-5 h-5" />
-                <span>{user?.email || displayProfile?.email}</span>
+                <span>{user?.email || getProfileEmail()}</span>
               </div>
-              {displayProfile?.phone && (
+              {getProfilePhone() && (
                 <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <Phone className="w-5 h-5" />
-                  <span>{displayProfile.phone}</span>
+                  <span>{getProfilePhone()}</span>
                 </div>
               )}
-              {displayProfile?.location && (
+              {getProfileLocation() && (
                 <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <MapPin className="w-5 h-5" />
-                  <span>{displayProfile.location}</span>
+                  <span>{getProfileLocation()}</span>
                 </div>
               )}
               <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                 <Calendar className="w-5 h-5" />
-                <span>Joined {formatDate(displayProfile?.created_at || '')}</span>
+                <span>Joined {formatDate(getProfileCreatedAt() || '')}</span>
               </div>
               
               {/* Bio */}
-              {displayProfile?.bio && (
+              {getProfileBio() && (
                 <div>
                   <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</h4>
                   <p className="text-gray-600 dark:text-gray-300 text-sm italic">
-                    "{getDisplayText(displayProfile.bio, 'bio')}"
+                    "{getDisplayText(getProfileBio())}"
                   </p>
                 </div>
               )}
               
-              {/* Additional Profile Info */}
-              {displayProfile?.favorite_cuisines && (
-                <div>
-                  <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Favorite Cuisines</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {displayProfile.favorite_cuisines.map((cuisine: string, index: number) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs rounded-full"
-                      >
-                        {cuisine}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {displayProfile?.cooking_level && (
+              {getProfileCookingLevel() && (
                 <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <ChefHat className="w-5 h-5" />
-                  <span>Cooking Level: {getDisplayText(displayProfile.cooking_level, 'cookingLevel')}</span>
+                  <span>Cooking Level: {getDisplayText(getProfileCookingLevel())}</span>
                 </div>
               )}
             </div>
@@ -345,7 +347,7 @@ export default function UserProfile() {
           {/* Statistics */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-6">
             <h3 className="text-lg font-semibold dark:text-white mb-4">
-              {getDisplayText('Impact Statistics', 'statsTitle')}
+              {getDisplayText('Impact Statistics')}
             </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -391,7 +393,7 @@ export default function UserProfile() {
         <div className="lg:col-span-2">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h3 className="text-xl font-semibold dark:text-white mb-6">
-              {isRestaurantAdmin ? 'Community Impact' : getDisplayText('My Food Claims', 'activityTitle')}
+              {isRestaurantAdmin ? 'Community Impact' : getDisplayText('My Food Claims')}
             </h3>
             
             {claims.length === 0 ? (
