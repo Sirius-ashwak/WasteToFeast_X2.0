@@ -71,7 +71,7 @@ export default function RestaurantDashboard() {
     if (user && isRestaurantAdmin) {
       loadRestaurants();
       // Initialize demo profiles if not already done
-      if (!demoProfiles.restaurant) {
+      if (demoProfiles.length === 0) {
         initializeDemoProfiles();
       }
     }
@@ -351,8 +351,54 @@ export default function RestaurantDashboard() {
   };
 
   // Use demo profile data if available
-  const displayProfile = profile || (user && isRestaurantAdmin ? demoProfiles.restaurant : null);
-  const isDemo = !profile && !!demoProfiles.restaurant;
+  const restaurantProfile = demoProfiles.find(p => p.role === 'restaurant_admin');
+  const displayProfile = profile || (user && isRestaurantAdmin ? restaurantProfile : null);
+  const isDemo = !profile && !!restaurantProfile;
+
+  // Safe property accessors for different profile types
+  const getProfileName = () => {
+    if (!displayProfile) return '';
+    if ('full_name' in displayProfile) return displayProfile.full_name || 'Restaurant Owner';
+    if ('name' in displayProfile) return displayProfile.name;
+    return 'Restaurant Owner';
+  };
+
+  const getProfileAvatar = () => {
+    if (!displayProfile) return null;
+    if ('avatar_url' in displayProfile) return displayProfile.avatar_url;
+    if ('avatar' in displayProfile) return displayProfile.avatar;
+    return null;
+  };
+
+  const getProfilePhone = () => {
+    if (!displayProfile) return null;
+    if ('phone' in displayProfile) return displayProfile.phone;
+    return null;
+  };
+
+  const getProfileBio = () => {
+    if (!displayProfile) return null;
+    if ('bio' in displayProfile) return (displayProfile as any).bio;
+    return null;
+  };
+
+  const getProfileImpactStats = () => {
+    if (!displayProfile) return null;
+    if ('impact_stats' in displayProfile) return (displayProfile as any).impact_stats;
+    return null;
+  };
+
+  const getProfileRestaurantInfo = () => {
+    if (!displayProfile) return null;
+    if ('restaurant_info' in displayProfile) return (displayProfile as any).restaurant_info;
+    return null;
+  };
+
+  const getProfileEmail = () => {
+    if (!displayProfile) return null;
+    if ('email' in displayProfile) return (displayProfile as any).email;
+    return null;
+  };
 
   if (!isRestaurantAdmin) {
     return (
@@ -386,9 +432,9 @@ export default function RestaurantDashboard() {
       {displayProfile && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
           <div className="flex items-center gap-6">
-            {displayProfile.avatar_url ? (
+            {getProfileAvatar() ? (
               <img
-                src={displayProfile.avatar_url}
+                src={getProfileAvatar()!}
                 alt="Profile"
                 className="w-16 h-16 rounded-full object-cover border-4 border-green-100 dark:border-green-900/30"
               />
@@ -401,7 +447,7 @@ export default function RestaurantDashboard() {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {displayProfile.full_name}
+                  {getProfileName()}
                 </h1>
                 {isDemo && (
                   <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full">
@@ -409,44 +455,55 @@ export default function RestaurantDashboard() {
                   </span>
                 )}
               </div>
-　　 　 　 　 {displayProfile.restaurant_info && (
+              {isDemo ? (
                 <div className="mb-3">
                   <h2 className="text-lg font-semibold text-green-600 dark:text-green-400">
-                    {displayProfile.restaurant_info.name}
+                    Green Garden Cafe
                   </h2>
                   <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    {displayProfile.restaurant_info.cuisine_type} • Est. {displayProfile.restaurant_info.established}
+                    Organic • Sustainable • Est. 2018
                   </p>
                 </div>
+              ) : (
+                (displayProfile as any)?.restaurant_info && (
+                  <div className="mb-3">
+                    <h2 className="text-lg font-semibold text-green-600 dark:text-green-400">
+                      {(displayProfile as any).restaurant_info.name}
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm">
+                      {(displayProfile as any).restaurant_info.cuisine_type} • Est. {(displayProfile as any).restaurant_info.established}
+                    </p>
+                  </div>
+                )
               )}
-　　 　 　 　 {displayProfile.bio && (
+              {getProfileBio() && (
                 <p className="text-gray-600 dark:text-gray-300 text-sm italic mb-3">
-                  "{displayProfile.bio}"
+                  "{getProfileBio()}"
                 </p>
               )}
-　　 　 　 　 {displayProfile.impact_stats && (
+              {getProfileImpactStats() && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <StatsCard
                     label="Meals Shared"
-                    value={displayProfile.impact_stats.meals_shared.toString()}
+                    value={getProfileImpactStats()?.meals_shared?.toString() || '0'}
                     icon={<Users className="w-5 h-5" />}
                     color="green"
                   />
                   <StatsCard
                     label="Waste Prevented"
-                    value={displayProfile.impact_stats.waste_prevented}
+                    value={getProfileImpactStats()?.waste_prevented || '0 kg'}
                     icon={<TrendingUp className="w-5 h-5" />}
                     color="blue"
                   />
                   <StatsCard
                     label="People Helped"
-                    value={displayProfile.impact_stats.community_members_helped.toString()}
+                    value={getProfileImpactStats()?.community_members_helped?.toString() || '0'}
                     icon={<Users className="w-5 h-5" />}
                     color="purple"
                   />
                   <StatsCard
                     label="Months Active"
-                    value={displayProfile.impact_stats.months_active.toString()}
+                    value={getProfileImpactStats()?.months_active?.toString() || '0'}
                     icon={<Clock className="w-5 h-5" />}
                     color="orange"
                   />
@@ -455,7 +512,7 @@ export default function RestaurantDashboard() {
             </div>
           </div>
 　　　 　 {/* Restaurant Details */}
-          {displayProfile.restaurant_info && (
+          {getProfileRestaurantInfo() && (
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
@@ -463,19 +520,19 @@ export default function RestaurantDashboard() {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.restaurant_info.address}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{getProfileRestaurantInfo()?.address || 'Address not available'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.restaurant_info.operating_hours}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{getProfileRestaurantInfo()?.operating_hours || 'Hours not available'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.phone}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{getProfilePhone() || 'Phone not available'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-300">{displayProfile.email}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{getProfileEmail() || 'Email not available'}</span>
                     </div>
                   </div>
                 </div>
@@ -485,7 +542,7 @@ export default function RestaurantDashboard() {
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialties</h4>
                       <div className="flex flex-wrap gap-1">
-                        {displayProfile.restaurant_info.specialties.map((specialty: string, index: number) => (
+                        {getProfileRestaurantInfo()?.specialties?.map((specialty: string, index: number) => (
                           <span
                             key={index}
                             className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs rounded-full"
@@ -498,7 +555,7 @@ export default function RestaurantDashboard() {
 　　　 　 　 　 　 <div>
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sustainability Practices</h4>
                       <div className="flex flex-wrap gap-1">
-                        {displayProfile.restaurant_info.sustainability_practices.map((practice: string, index: number) => (
+                        {getProfileRestaurantInfo()?.sustainability_practices?.map((practice: string, index: number) => (
                           <span
                             key={index}
                             className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full"
@@ -511,7 +568,7 @@ export default function RestaurantDashboard() {
 　　　 　 　 　 　 <div>
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certifications</h4>
                       <div className="flex flex-wrap gap-1">
-                        {displayProfile.restaurant_info.certifications.map((cert: string, index: number) => (
+                        {getProfileRestaurantInfo()?.certifications?.map((cert: string, index: number) => (
                           <span
                             key={index}
                             className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 text-xs rounded-full"
