@@ -256,45 +256,12 @@ export default function RecipeGenerator({ ingredients = [] }: Props) {
   const handleSaveRecipe = () => {
     if (!parsedRecipe) return;
 
-    // Determine cooking method based on recipe name and ingredients
-    const recipeName = parsedRecipe.name.toLowerCase();
-    let cookingMethod = 'Other';
-    
-    if (recipeName.includes('one-pot') || recipeName.includes('one pot')) {
-      cookingMethod = 'One-Pot';
-    } else if (recipeName.includes('stir') || recipeName.includes('fry')) {
-      cookingMethod = 'Stir Fry';
-    } else if (recipeName.includes('bake') || recipeName.includes('oven')) {
-      cookingMethod = 'Baked';
-    } else if (recipeName.includes('grill')) {
-      cookingMethod = 'Grilled';
-    } else if (recipeName.includes('slow') || recipeName.includes('crockpot')) {
-      cookingMethod = 'Slow Cooker';
-    } else if (recipeName.includes('instant') || recipeName.includes('pressure')) {
-      cookingMethod = 'Instant Pot';
-    } else if (recipeName.includes('sheet') || recipeName.includes('pan')) {
-      cookingMethod = 'Sheet Pan';
-    } else if (recipeName.includes('salad') || recipeName.includes('raw')) {
-      cookingMethod = 'No Cook';
-    } else {
-      cookingMethod = 'Stovetop';
-    }
-
-    // Parse time strings to numbers
-    const parseTime = (timeStr: string): number => {
-      const match = timeStr.match(/(\d+)/);
-      return match ? parseInt(match[1]) : 30;
-    };
-
     const meal = {
-      recipeName: parsedRecipe.name,
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
       ingredients: selectedIngredients,
-      prepTime: parseTime(parsedRecipe.prepTime),
-      cookTime: parseTime(parsedRecipe.cookTime),
-      servings: parseTime(parsedRecipe.servings),
-      rating: rating || 4,
-      cookingMethod,
-      difficulty: 'medium' as const,
+      recipes: [parsedRecipe.name],
+      wasteReduced: selectedIngredients.length * 0.1, // Estimate based on ingredients used
     };
 
     addMealToHistory(meal);
