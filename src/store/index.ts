@@ -390,7 +390,7 @@ export const useStore = create<AppState>()(
   },
     }),
     {
-      name: 'waste-to-feast-storage',
+      name: 'greenbyte-storage',
       partialize: (state) => ({
         mealHistory: state.mealHistory,
         cookingStats: state.cookingStats,
