@@ -397,30 +397,30 @@ export default function RestaurantDashboard() {
               )}
 　　 　 　 　 {displayProfile.impact_stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                      {displayProfile.impact_stats.meals_shared}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-300">Meals Shared</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                      {displayProfile.impact_stats.waste_prevented}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-300">Waste Prevented</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                      {displayProfile.impact_stats.community_members_helped}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-300">People Helped</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                      {displayProfile.impact_stats.months_active}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-300">Months Active</div>
-                  </div>
+                  <StatsCard
+                    label="Meals Shared"
+                    value={displayProfile.impact_stats.meals_shared.toString()}
+                    icon={<Users className="w-5 h-5" />}
+                    color="green"
+                  />
+                  <StatsCard
+                    label="Waste Prevented"
+                    value={displayProfile.impact_stats.waste_prevented}
+                    icon={<TrendingUp className="w-5 h-5" />}
+                    color="blue"
+                  />
+                  <StatsCard
+                    label="People Helped"
+                    value={displayProfile.impact_stats.community_members_helped.toString()}
+                    icon={<Users className="w-5 h-5" />}
+                    color="purple"
+                  />
+                  <StatsCard
+                    label="Months Active"
+                    value={displayProfile.impact_stats.months_active.toString()}
+                    icon={<Clock className="w-5 h-5" />}
+                    color="orange"
+                  />
                 </div>
               )}
             </div>
@@ -596,53 +596,29 @@ export default function RestaurantDashboard() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Listings</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.totalListings}</p>
-                </div>
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                  <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center text-sm">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-green-600 dark:text-green-400">+12% from last month</span>
-              </div>
-            </div>
+            <StatsCard
+              label="Total Listings"
+              value={analytics.totalListings.toString()}
+              icon={<Users className="w-5 h-5" />}
+              trend="+12%"
+              color="blue"
+            />
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Listings</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.activeListing}</p>
-                </div>
-                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
-                  <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center text-sm">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-green-600 dark:text-green-400">{analytics.wasteReduced}kg waste reduced</span>
-              </div>
-            </div>
+            <StatsCard
+              label="Active Listings"
+              value={analytics.activeListing.toString()}
+              icon={<CheckCircle className="w-5 h-5" />}
+              description={`${analytics.wasteReduced}kg waste reduced`}
+              color="green"
+            />
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">People Fed</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.peopleFed}</p>
-                </div>
-                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                  <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center text-sm">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-green-600 dark:text-green-400">Community impact</span>
-              </div>
-            </div>
+            <StatsCard
+              label="People Fed"
+              value={analytics.peopleFed.toString()}
+              icon={<Star className="w-5 h-5" />}
+              description="Community impact"
+              color="purple"
+            />
           </div>
         </div>
       )}

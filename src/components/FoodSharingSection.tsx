@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Heart, Users, Utensils, Store, User } from 'lucide-react';
 import FoodMap from './FoodMap';
+import SearchInput from './SearchInput';
+import StatsCard from './StatsCard';
 import { useStore } from '../store';
 import { useAuth } from '../hooks/useAuth';
 import { getFoodSharingStats, getRestaurantStats } from '../services/foodSharing';
@@ -99,59 +101,54 @@ export default function FoodSharingSection() {
           </div>
         )}
         
-        {/* Feature highlights */}
+        {/* Search Section for non-restaurant users */}
+        {!isRestaurantAdmin && (
+          <div className="mb-8">
+            <SearchInput
+              placeholder="Search for food by type, restaurant, or location..."
+              onSearch={(query, filters) => {
+                console.log('Search:', query, 'Filters:', filters);
+                // TODO: Implement food search functionality
+              }}
+              filters={['Vegetarian', 'Vegan', 'Gluten-Free', 'Available Now', 'Nearby']}
+              className="max-w-2xl mx-auto"
+            />
+          </div>
+        )}
+        
+        {/* Feature highlights with StatsCards */}
         <div className="grid md:grid-cols-4 gap-6 mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-          >
-            <MapPin className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-3" />
-            <h3 className="font-semibold mb-2 dark:text-white">Find Nearby</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Discover restaurants with available food in your area
-            </p>
-          </motion.div>
+          <StatsCard
+            icon={<MapPin />}
+            label="Find Nearby"
+            value="Location-based"
+            description="Restaurants with available food"
+            color="green"
+          />
           
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-          >
-            <Heart className="w-8 h-8 text-red-500 mx-auto mb-3" />
-            <h3 className="font-semibold mb-2 dark:text-white">Reduce Waste</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Help prevent perfectly good food from going to waste
-            </p>
-          </motion.div>
+          <StatsCard
+            icon={<Heart />}
+            label="Reduce Waste"
+            value="Zero Waste"
+            description="Help prevent food waste"
+            color="red"
+          />
           
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-          >
-            <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
-            <h3 className="font-semibold mb-2 dark:text-white">Build Community</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Connect restaurants and community members for a good cause
-            </p>
-          </motion.div>
+          <StatsCard
+            icon={<Users />}
+            label="Build Community"
+            value="Together"
+            description="Connect for a good cause"
+            color="blue"
+          />
           
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-          >
-            <Utensils className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-3" />
-            <h3 className="font-semibold mb-2 dark:text-white">Easy Claiming</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Simple one-click claiming process for available food
-            </p>
-          </motion.div>
+          <StatsCard
+            icon={<Utensils />}
+            label="Easy Claiming"
+            value="One-Click"
+            description="Simple claiming process"
+            color="purple"
+          />
         </div>
       </motion.div>
 
@@ -188,40 +185,42 @@ export default function FoodSharingSection() {
         </div>
       </motion.div>
 
-      {/* Quick stats */}
+      {/* Stats with StatsCard components */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
         className="mt-8 grid md:grid-cols-3 gap-6"
       >
-        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg">
-          <h4 className="text-lg font-semibold mb-2">
-            {isRestaurantAdmin ? 'Your Active Listings' : 'Active Listings'}
-          </h4>
-          <p className="text-2xl font-bold">{stats.availableListings}</p>
-          <p className="text-sm opacity-90">Available right now</p>
-        </div>
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
-          <h4 className="text-lg font-semibold mb-2">
-            {isRestaurantAdmin ? 'Total Shared' : 'Meals Saved'}
-          </h4>
-          <p className="text-2xl font-bold">
-            {isRestaurantAdmin ? stats.totalListings : stats.thisMonthClaims}
-          </p>
-          <p className="text-sm opacity-90">
-            {isRestaurantAdmin ? 'All time' : 'This month'}
-          </p>
-        </div>
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg">
-          <h4 className="text-lg font-semibold mb-2">
-            {isRestaurantAdmin ? 'Your Restaurants' : 'Participating Restaurants'}
-          </h4>
-          <p className="text-2xl font-bold">{stats.activeRestaurants}</p>
-          <p className="text-sm opacity-90">
-            {isRestaurantAdmin ? 'Registered' : 'In your area'}
-          </p>
-        </div>
+        <StatsCard
+          icon={<Utensils />}
+          label={isRestaurantAdmin ? 'Your Active Listings' : 'Active Listings'}
+          value={stats.availableListings}
+          description="Available right now"
+          trend="+12%"
+          trendDirection="up"
+          color="green"
+        />
+        
+        <StatsCard
+          icon={<Users />}
+          label={isRestaurantAdmin ? 'Total Shared' : 'Meals Saved'}
+          value={isRestaurantAdmin ? stats.totalListings : stats.thisMonthClaims}
+          description={isRestaurantAdmin ? 'All time' : 'This month'}
+          trend="+8%"
+          trendDirection="up"
+          color="blue"
+        />
+        
+        <StatsCard
+          icon={<Store />}
+          label={isRestaurantAdmin ? 'Your Restaurants' : 'Participating Restaurants'}
+          value={stats.activeRestaurants}
+          description={isRestaurantAdmin ? 'Registered' : 'In your area'}
+          trend="+3%"
+          trendDirection="up"
+          color="purple"
+        />
       </motion.div>
     </section>
   );
