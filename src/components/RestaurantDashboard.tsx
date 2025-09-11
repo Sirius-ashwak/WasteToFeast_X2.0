@@ -1077,18 +1077,35 @@ export default function RestaurantDashboard() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Dietary Information
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Nut-Free', 'Halal'].map((info) => (
-                      <label key={info} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={foodForm.dietary_info.includes(info)}
-                          onChange={() => handleDietaryInfoChange(info)}
-                          className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Nut-Free', 'Halal'].map((info) => (
+                        <label key={info} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={foodForm.dietary_info.includes(info)}
+                            onChange={() => handleDietaryInfoChange(info)}
+                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          />
+                          <span className="ml-2 text-sm dark:text-gray-300">{info}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {foodForm.dietary_info.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Selected:</p>
+                        <BadgeList
+                          badges={foodForm.dietary_info}
+                          onRemove={(badge) => {
+                            if (typeof badge === 'string') {
+                              handleDietaryInfoChange(badge);
+                            } else {
+                              handleDietaryInfoChange(badge.label);
+                            }
+                          }}
                         />
-                        <span className="ml-2 text-sm dark:text-gray-300">{info}</span>
-                      </label>
-                    ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
