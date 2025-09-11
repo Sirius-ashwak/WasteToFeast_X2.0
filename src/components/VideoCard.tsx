@@ -1,15 +1,9 @@
 import { Play, Eye } from 'lucide-react';
+import { YouTubeVideo } from '../services/youtube';
+import { youtubeService } from '../services/youtube';
 
 interface VideoCardProps {
-  video: {
-    id: string;
-    title: string;
-    thumbnail: string;
-    duration: string;
-    views: string;
-    channel: string;
-    url: string;
-  };
+  video: YouTubeVideo;
   onClick?: () => void;
 }
 
@@ -18,7 +12,8 @@ export default function VideoCard({ video, onClick }: VideoCardProps) {
     if (onClick) {
       onClick();
     } else {
-      window.open(video.url, '_blank');
+      const url = youtubeService.getWatchUrl(video.id);
+      window.open(url, '_blank');
     }
   };
 
@@ -37,7 +32,7 @@ export default function VideoCard({ video, onClick }: VideoCardProps) {
           <Play className="w-12 h-12 text-white opacity-0 hover:opacity-100 transition-opacity duration-200" />
         </div>
         <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-          {video.duration}
+          {video.duration || '5:00'}
         </div>
       </div>
       
@@ -47,10 +42,10 @@ export default function VideoCard({ video, onClick }: VideoCardProps) {
         </h3>
         
         <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-          <span className="truncate">{video.channel}</span>
+          <span className="truncate">{video.channelTitle}</span>
           <div className="flex items-center gap-1">
             <Eye className="w-3 h-3" />
-            <span>{video.views}</span>
+            <span>{video.viewCount || 'N/A'}</span>
           </div>
         </div>
       </div>
