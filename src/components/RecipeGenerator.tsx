@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { generateRecipe } from '../services/ai';
 import { youtubeService, type YouTubeVideo } from '../services/youtube';
-import { ChefHat, Clock, ArrowRight, Check, X, Utensils, Users, AlarmClock, Timer, Flame, LucideInfo, BarChart3, Dumbbell, Banana, CircleDashed, Save, Play } from 'lucide-react';
+import { ChefHat, Clock, ArrowRight, Check, X, Utensils, Users, Timer, CircleDashed, Play, AlarmClock, Flame, Info as LucideInfo, BarChart3, Save, Dumbbell, Apple } from 'lucide-react';
 import { useStore } from '../store';
 import { StarIcon } from '@heroicons/react/24/solid';
 import VideoCard from './VideoCard';
@@ -11,11 +11,12 @@ import VideoCard from './VideoCard';
 // import { HuggingFaceTranslationService } from '../services/translationService';
 
 interface Props {
-  ingredients: string[];
+  ingredients?: string[];
 }
 
 interface ParsedRecipe {
   name: string;
+  description?: string;
   prepTime: string;
   cookTime: string;
   servings: string;
@@ -25,10 +26,10 @@ interface ParsedRecipe {
   nutrition: string[];
 }
 
-const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
+export default function RecipeGenerator({ ingredients = [] }: Props) {
   const [recipe, setRecipe] = useState<string>('');
   const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [rating, setRating] = useState(0);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
@@ -40,12 +41,12 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
   // const [translatedRecipe, setTranslatedRecipe] = useState<ParsedRecipe | null>(null);
   const { currentAnalysis, setCurrentAnalysis, addMealToHistory } = useStore();
 
-  // Update selected ingredients when ingredients prop changes
+  // Update selected ingredients when currentAnalysis changes
   useEffect(() => {
-    if (ingredients && ingredients.length > 0) {
-      setSelectedIngredients([...ingredients]);
+    if (currentAnalysis?.ingredients && currentAnalysis.ingredients.length > 0) {
+      setSelectedIngredients([...currentAnalysis.ingredients]);
     }
-  }, [ingredients]);
+  }, [currentAnalysis]);
 
   // Parse recipe text into structured format whenever recipe changes
   useEffect(() => {
@@ -164,11 +165,10 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
   const getCurrentRecipe = () => {
     return parsedRecipe;
   };
-  };
 
   const toggleIngredient = (ingredient: string) => {
     if (selectedIngredients.includes(ingredient)) {
-      setSelectedIngredients(selectedIngredients.filter(i => i !== ingredient));
+      setSelectedIngredients(selectedIngredients.filter((i: string) => i !== ingredient));
     } else {
       setSelectedIngredients([...selectedIngredients, ingredient]);
     }
@@ -210,7 +210,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
     if (specificDish) {
       setGeneratingFor(specificDish);
     } else {
@@ -243,7 +243,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
       toast.error(errorMessage);
       console.error('Recipe generation error:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
       setGeneratingFor(null);
     }
   };
@@ -334,7 +334,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
         <div className="bg-white rounded-lg shadow-md p-5 dark:bg-gray-800 dark:border dark:border-gray-700 w-full transition-colors duration-200">
           <h3 className="text-xl font-bold mb-4 dark:text-white">Select Ingredients</h3>
           <div className="flex flex-wrap gap-2 mb-4">
-            {ingredients.map((ingredient, index) => (
+            {currentAnalysis?.ingredients?.map((ingredient, index) => (
               <button
                 key={index}
                 onClick={() => toggleIngredient(ingredient)}
@@ -395,10 +395,10 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                         e.stopPropagation();
                         handleGenerateRecipe(suggestion);
                       }}
-                      disabled={loading && generatingFor === suggestion}
+                      disabled={isLoading && generatingFor === suggestion}
                       className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800"
                     >
-                      {loading && generatingFor === suggestion ? (
+                      {isLoading && generatingFor === suggestion ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-2 border-green-500 border-t-transparent"></div>
                           Generating...
@@ -473,12 +473,12 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
               e.preventDefault();
               handleGenerateRecipe();
             }}
-            disabled={loading || selectedIngredients.length === 0}
+            disabled={isLoading || selectedIngredients.length === 0}
             className="w-full mb-4 px-6 py-3 bg-green-500 text-white rounded-lg 
                     hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed
                       transition-colors duration-200 font-semibold text-lg flex items-center justify-center gap-2"
           >
-            {loading && !generatingFor ? (
+            {isLoading && !generatingFor ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                 Generating Recipe...
@@ -710,7 +710,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                                   animate={{ y: [0, -3, 0] }}
                                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                                 >
-                                  <Banana className="h-5 w-5 text-yellow-500" />
+                                  <Apple className="h-5 w-5 text-yellow-500" />
                                 </motion.div>
                               );
                             } else if (/fat/i.test(label)) {
@@ -822,6 +822,4 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
       </div>
     </section>
   );
-};
-
-export default RecipeGenerator;
+}
