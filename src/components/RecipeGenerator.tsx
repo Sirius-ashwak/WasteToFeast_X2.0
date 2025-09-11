@@ -363,7 +363,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow dark:bg-gray-700 dark:border-gray-600 transition-colors duration-200"
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 dark:bg-gray-700 dark:border-gray-600"
                 >
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-3">
