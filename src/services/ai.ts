@@ -6,15 +6,17 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Retry configuration
 const RETRY_CONFIG = {
-  maxRetries: 3,
-  baseDelay: 2000, // 2 seconds
-  maxDelay: 10000, // 10 seconds
+  maxRetries: 5, // Increased from 3 to 5 for 503 errors
+  baseDelay: 3000, // Increased from 2000 to 3000ms (3 seconds)
+  maxDelay: 20000, // Increased from 10000 to 20000ms (20 seconds)
 };
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!API_KEY) {
   console.error('VITE_GEMINI_API_KEY is not defined in environment variables');
+} else {
+  console.log('Gemini API key loaded:', API_KEY.substring(0, 10) + '...');
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY);
@@ -26,12 +28,17 @@ async function retryWithBackoff<T>(
   try {
     return await fn();
   } catch (error: any) {
-    if (retries > 0 && error?.message?.includes('overloaded')) {
+    const isRetryableError = error?.message?.includes('overloaded') || 
+                           error?.message?.includes('503') ||
+                           error?.message?.includes('rate limit') ||
+                           error?.message?.includes('429');
+    
+    if (retries > 0 && isRetryableError) {
       const delay = Math.min(
         RETRY_CONFIG.baseDelay * (RETRY_CONFIG.maxRetries - retries + 1),
         RETRY_CONFIG.maxDelay
       );
-      console.log(`API overloaded, retrying in ${delay}ms... (${retries} retries left)`);
+      console.log(`API ${error?.message?.includes('503') ? 'overloaded' : 'rate limited'}, retrying in ${delay}ms... (${retries} retries left)`);
       await wait(delay);
       return retryWithBackoff(fn, retries - 1);
     }
@@ -138,10 +145,30 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
     };
 
   } catch (error) {
-    console.error('Image analysis error:', error);
+    console.error('Image analysis error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      type: typeof error,
+      error: error
+    });
+    
     if (error instanceof Error) {
-      if (error.message.includes('overloaded')) {
-        throw new Error('The AI service is currently busy. Please try again in a few moments.');
+      if (error.message.includes('overloaded') || error.message.includes('503')) {
+        throw new Error('Google\'s AI service is currently overloaded due to high demand. The app will automatically retry, or you can try again in 10-15 minutes.');
+      }
+      if (error.message.includes('rate limit') || error.message.includes('429')) {
+        throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+      }
+      if (error.message.includes('quota')) {
+        throw new Error('API quota exceeded. Please try again later or contact support.');
+      }
+      if (error.message.includes('API key')) {
+        throw new Error('AI service configuration issue. Please check the API key settings.');
+      }
+      if (error.message.includes('PERMISSION_DENIED')) {
+        throw new Error('API access denied. Please verify your Gemini API key has the necessary permissions.');
+      }
+      if (error.message.includes('403')) {
+        throw new Error('API access forbidden. Your API key may have insufficient permissions or quota exceeded.');
       }
       throw new Error(`Analysis failed: ${error.message}`);
     }
