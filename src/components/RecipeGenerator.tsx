@@ -157,6 +157,15 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
     setParsedRecipe(parseRecipeText(recipe));
   }, [recipe]);
 
+  // Translation functionality - TEMPORARILY DISABLED
+  // const handleLanguageChange = async (languageCode: string) => { ... };
+
+  // Get current recipe to display - TEMPORARILY DISABLED
+  const getCurrentRecipe = () => {
+    return parsedRecipe;
+  };
+  };
+
   const toggleIngredient = (ingredient: string) => {
     if (selectedIngredients.includes(ingredient)) {
       setSelectedIngredients(selectedIngredients.filter(i => i !== ingredient));
@@ -420,6 +429,16 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold dark:text-white">Custom Recipe Generator</h2>
+            
+            {/* Language Selector - TEMPORARILY DISABLED */}
+            {/* {parsedRecipe && translationService.isAvailable() && (
+              <LanguageSelector
+                currentLanguage={selectedLanguage}
+                onLanguageChange={handleLanguageChange}
+                disabled={isTranslating}
+                className="flex-shrink-0"
+              />
+            )} */}
           
             {/* Star Rating */}
             {recipe && (
@@ -493,10 +512,20 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
               animate={{ opacity: 1, y: 0 }}
               className="mt-6"
             >
+              {/* Translation Loading - TEMPORARILY DISABLED */}
+              {/* {isTranslating && (
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                    <span className="text-blue-700 dark:text-blue-300 text-sm font-medium">Translating recipe...</span>
+                  </div>
+                </div>
+              )} */}
+              
               <div className="bg-white rounded-xl shadow-md overflow-hidden dark:bg-gray-800 border border-gray-100 dark:border-gray-700 transition-colors duration-200">
                 {/* Recipe Header */}
                 <div className="bg-green-600 px-6 py-4 text-white dark:bg-green-700 transition-colors duration-200">
-                  <h3 className="text-2xl font-bold">{parsedRecipe.name}</h3>
+                  <h3 className="text-2xl font-bold">{getCurrentRecipe()?.name}</h3>
                 </div>
                 
                 {/* Recipe Info */}
@@ -506,17 +535,17 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                     <div className="flex flex-col items-center bg-green-50 rounded-lg p-3 dark:bg-gray-700/50 transition-colors duration-200">
                       <AlarmClock className="h-6 w-6 text-green-600 mb-1 dark:text-green-400" />
                       <span className="text-xs text-gray-500 dark:text-gray-400">Prep Time</span>
-                      <span className="font-medium text-gray-800 dark:text-gray-200">{parsedRecipe.prepTime}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">{getCurrentRecipe()?.prepTime}</span>
                     </div>
                     <div className="flex flex-col items-center bg-green-50 rounded-lg p-3 dark:bg-gray-700/50 transition-colors duration-200">
                       <Flame className="h-6 w-6 text-green-600 mb-1 dark:text-green-400" />
                       <span className="text-xs text-gray-500 dark:text-gray-400">Cook Time</span>
-                      <span className="font-medium text-gray-800 dark:text-gray-200">{parsedRecipe.cookTime}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">{getCurrentRecipe()?.cookTime}</span>
                     </div>
                     <div className="flex flex-col items-center bg-green-50 rounded-lg p-3 dark:bg-gray-700/50 transition-colors duration-200">
                       <Users className="h-6 w-6 text-green-600 mb-1 dark:text-green-400" />
                       <span className="text-xs text-gray-500 dark:text-gray-400">Servings</span>
-                      <span className="font-medium text-gray-800 dark:text-gray-200">{parsedRecipe.servings}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">{getCurrentRecipe()?.servings}</span>
                     </div>
                     <div className="flex flex-col items-center bg-green-50 rounded-lg p-3 dark:bg-gray-700/50 transition-colors duration-200">
                       <Utensils className="h-6 w-6 text-green-600 mb-1 dark:text-green-400" />
@@ -532,7 +561,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                       Ingredients
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {parsedRecipe.ingredients.map((ingredient, index) => (
+                      {getCurrentRecipe()?.ingredients.map((ingredient, index) => (
                         <div 
                           key={index} 
                           className="flex items-center gap-2 p-2 bg-gray-50 rounded-md dark:bg-gray-700 transition-colors duration-200"
@@ -540,7 +569,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                           <span className="text-gray-800 dark:text-gray-200">{ingredient}</span>
                         </div>
-                      ))}
+                      )) || []}
                     </div>
                   </div>
                   
@@ -551,7 +580,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                       Instructions
                     </h4>
                     <div className="space-y-4">
-                      {parsedRecipe.instructions.map((instruction, index) => {
+                      {getCurrentRecipe()?.instructions.map((instruction, index) => {
                         // Clean up the instruction text by removing markdown formatting
                         let cleanInstruction = instruction.replace(/\*\*/g, '');
                         
@@ -586,12 +615,12 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                             </div>
                           </div>
                         );
-                      })}
+                      }) || []}
                     </div>
                   </div>
                   
                   {/* Tips */}
-                  {parsedRecipe.tips.length > 0 && (
+                  {getCurrentRecipe()?.tips && getCurrentRecipe()?.tips.length > 0 && (
                     <div className="mb-8">
                       <h4 className="text-lg font-bold mb-4 flex items-center gap-2 dark:text-white">
                         <LucideInfo className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -599,7 +628,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                       </h4>
                       <div className="bg-yellow-50 p-4 rounded-lg dark:bg-yellow-900/20 dark:border dark:border-yellow-900/30 transition-colors duration-200">
                         <ul className="space-y-2">
-                          {parsedRecipe.tips.map((tip, index) => (
+                          {getCurrentRecipe()?.tips.map((tip, index) => (
                             <li 
                               key={index} 
                               className="flex items-start gap-2 text-gray-800 dark:text-gray-200"
@@ -607,14 +636,14 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                               <span className="text-yellow-500">•</span>
                               {tip}
                             </li>
-                          ))}
+                          )) || []}
                         </ul>
                       </div>
                     </div>
                   )}
 
                   {/* Nutrition */}
-                  {parsedRecipe.nutrition.length > 0 && (
+                  {getCurrentRecipe()?.nutrition && getCurrentRecipe()?.nutrition.length > 0 && (
                     <div>
                       <h4 className="text-lg font-bold mb-4 flex items-center gap-2 dark:text-white">
                         <BarChart3 className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -622,7 +651,7 @@ const RecipeGenerator: React.FC<Props> = ({ ingredients }) => {
                       </h4>
                       <div className="bg-blue-50 p-5 rounded-lg dark:bg-blue-900/20 dark:border dark:border-blue-900/30 transition-colors duration-200">
                         <div className="space-y-4">
-                          {parsedRecipe.nutrition.map((item, index) => {
+                          {getCurrentRecipe()?.nutrition.map((item, index) => {
                             // Clean up the item from any markdown formatting
                             const cleanItem = item.replace(/\*\*/g, '');
                             

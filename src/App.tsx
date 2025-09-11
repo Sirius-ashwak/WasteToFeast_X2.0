@@ -126,7 +126,7 @@ function App() {
                 AI Recipe Generator
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                Transform your leftover ingredients into delicious meals with AI-powered recipe suggestions
+                Transform your leftover ingredients into delicious meals with AI-powered recipe suggestions and cooking videos
               </p>
             </div>
             
