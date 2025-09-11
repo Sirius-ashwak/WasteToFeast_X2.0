@@ -1,4 +1,4 @@
-# Waste to Feast
+# GreenByte
 
 A modern web application that transforms leftover ingredients into delicious meals using AI-powered recipe generation.
 

@@ -42,7 +42,7 @@ export default function Navbar({ currentView, onViewChange, onAuthClick }: Navba
             >
               <Sprout className="w-8 h-8 text-green-600" />
               <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Waste to Feast
+                GreenByte
               </span>
             </motion.div>
             <div className="flex items-center gap-4">
@@ -72,7 +72,7 @@ export default function Navbar({ currentView, onViewChange, onAuthClick }: Navba
           >
             <Sprout className="w-8 h-8 text-green-600" />
             <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Waste to Feast
+              GreenByte
             </span>
           </motion.div>
 

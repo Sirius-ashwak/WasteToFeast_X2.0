@@ -105,7 +105,7 @@ function App() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-300 text-lg">
-              Initializing Waste to Feast...
+              Initializing GreenByte...
             </p>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
               If this takes too long, please refresh the page
@@ -185,7 +185,7 @@ function App() {
           return (
             <div className="text-center py-16">
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                Welcome to Waste to Feast
+                Welcome to GreenByte
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
                 Sign in or create an account to access your profile

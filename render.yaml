@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: waste-to-feast
+    name: greenbyte
     runtime: static
     buildCommand: npm run build
     staticPublishPath: ./dist
