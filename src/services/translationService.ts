@@ -22,15 +22,13 @@ export const supportedLanguages: LanguageOption[] = [
   { code: 'ja', name: 'Japanese', flag: '🇯🇵', hfCode: 'ja_XX' },
   { code: 'ko', name: 'Korean', flag: '🇰🇷', hfCode: 'ko_KR' },
   { code: 'hi', name: 'Hindi', flag: '🇮🇳', hfCode: 'hi_IN' },
+  { code: 'ta', name: 'Tamil', flag: '🇮🇳', hfCode: 'ta_IN' },
   { code: 'ru', name: 'Russian', flag: '🇷🇺', hfCode: 'ru_RU' },
   { code: 'nl', name: 'Dutch', flag: '🇳🇱', hfCode: 'nl_XX' },
   { code: 'sv', name: 'Swedish', flag: '🇸🇪', hfCode: 'sv_SE' },
   { code: 'fi', name: 'Finnish', flag: '🇫🇮', hfCode: 'fi_FI' },
 ];
 
-interface TranslationResponse {
-  translation_text: string;
-}
 
 class HuggingFaceTranslationService {
   private apiKey: string;
