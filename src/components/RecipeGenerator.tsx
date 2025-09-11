@@ -587,7 +587,7 @@ export default function RecipeGenerator({ ingredients = [] }: Props) {
                   </div>
                   
                   {/* Tips */}
-                  {getCurrentRecipe()?.tips && getCurrentRecipe()?.tips.length > 0 && (
+                  {getCurrentRecipe()?.tips && getCurrentRecipe()!.tips.length > 0 && (
                     <div className="mb-8">
                       <h4 className="text-lg font-bold mb-4 flex items-center gap-2 dark:text-white">
                         <LucideInfo className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -610,7 +610,7 @@ export default function RecipeGenerator({ ingredients = [] }: Props) {
                   )}
 
                   {/* Nutrition */}
-                  {getCurrentRecipe()?.nutrition && getCurrentRecipe()?.nutrition.length > 0 && (
+                  {getCurrentRecipe()?.nutrition && getCurrentRecipe()!.nutrition.length > 0 && (
                     <div>
                       <h4 className="text-lg font-bold mb-4 flex items-center gap-2 dark:text-white">
                         <BarChart3 className="h-5 w-5 text-green-600 dark:text-green-400" />
