@@ -1,111 +1,101 @@
-import { User, Mail, MapPin, Calendar, Edit } from 'lucide-react';
+import { User, Mail, Edit } from 'lucide-react';
 
 interface ProfileCardProps {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-    location?: string;
-    joinedDate?: string;
-    bio?: string;
-    stats?: {
-      mealsShared: number;
-      wasteReduced: number;
-      recipesGenerated: number;
-    };
-  };
-  onEdit?: () => void;
+  avatarUrl?: string;
+  name: string;
+  title: string;
+  handle?: string;
+  status?: string;
+  contactText?: string;
+  showUserInfo?: boolean;
+  enableTilt?: boolean;
+  onContactClick?: () => void;
   className?: string;
 }
 
-export default function ProfileCard({ user, onEdit, className = "" }: ProfileCardProps) {
+export default function ProfileCard({ 
+  avatarUrl, 
+  name, 
+  title, 
+  handle, 
+  status, 
+  contactText = "Contact", 
+  showUserInfo = true, 
+  enableTilt = false, 
+  onContactClick, 
+  className = "" 
+}: ProfileCardProps) {
+
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-100 dark:border-gray-700 transition-colors duration-200 ${className}`}>
-      {/* Header with Avatar and Basic Info */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-            {user.avatar ? (
-              <img 
-                src={user.avatar} 
-                alt={user.name}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-            ) : (
-              <User className="w-8 h-8 text-green-600 dark:text-green-400" />
-            )}
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {user.name}
-            </h2>
-            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 mt-1">
-              <Mail className="w-4 h-4" />
-              <span className="text-sm">{user.email}</span>
-            </div>
-            {user.location && (
-              <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 mt-1">
-                <MapPin className="w-4 h-4" />
-                <span className="text-sm">{user.location}</span>
-              </div>
-            )}
-          </div>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-100 dark:border-gray-700 transition-colors duration-200 ${enableTilt ? 'transform hover:scale-105 transition-transform' : ''} ${className}`}>
+      <div className="flex items-center space-x-4 mb-6">
+        <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden">
+          {avatarUrl ? (
+            <img 
+              src={avatarUrl} 
+              alt={name} 
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            <User className="w-8 h-8" />
+          )}
         </div>
-        {onEdit && (
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {name}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-300 text-sm">
+            {title}
+          </p>
+          {handle && (
+            <p className="text-gray-500 dark:text-gray-400 text-xs">
+              @{handle}
+            </p>
+          )}
+        </div>
+        {onContactClick && (
           <button
-            onClick={onEdit}
+            onClick={onContactClick}
             className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            title={contactText}
           >
             <Edit className="w-5 h-5" />
           </button>
         )}
       </div>
 
-      {/* Bio */}
-      {user.bio && (
-        <div className="mb-6">
-          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-            {user.bio}
+      {status && (
+        <div className="mb-4">
+          <p className="text-green-600 dark:text-green-400 font-medium text-sm">
+            {status}
           </p>
         </div>
       )}
 
-      {/* Stats */}
-      {user.stats && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {user.stats.mealsShared}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Meals Shared
-            </div>
+      {showUserInfo && (
+        <div className="space-y-3">
+          <div className="flex items-center text-gray-600 dark:text-gray-400">
+            <User className="w-4 h-4 mr-2" />
+            <span className="text-sm">{title}</span>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {user.stats.wasteReduced}kg
+          
+          {handle && (
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
+              <Mail className="w-4 h-4 mr-2" />
+              <span className="text-sm">@{handle}</span>
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Waste Reduced
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {user.stats.recipesGenerated}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Recipes Generated
-            </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* Join Date */}
-      {user.joinedDate && (
-        <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Calendar className="w-4 h-4" />
-          <span>Joined {user.joinedDate}</span>
+      {onContactClick && (
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={onContactClick}
+            className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm"
+          >
+            {contactText}
+          </button>
         </div>
       )}
     </div>

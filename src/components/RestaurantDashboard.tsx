@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, MapPin, Clock, Users, Phone, Mail, Building2, CheckCircle, XCircle, Edit3, Trash2, Settings, TrendingUp, Star } from 'lucide-react';
+import { Building2, MapPin, Clock, Users, Plus, Trash2, Star, Phone, Mail, TrendingUp, CheckCircle, Settings, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { createRestaurant, getRestaurantsByAdmin, createFoodListing, getFoodListingsByRestaurant } from '../services/foodSharing';
 import { supabase } from '../lib/supabase';
@@ -13,7 +13,6 @@ import TabNavigation from './TabNavigation';
 import StatsCard from './StatsCard';
 import ActionButton from './ActionButton';
 import ConfirmDialog from './ConfirmDialog';
-import BadgeList from './BadgeList';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
@@ -290,21 +289,6 @@ export default function RestaurantDashboard() {
     }
   };
 
-  const handleEditFood = (listing: FoodListingWithRestaurant) => {
-    setEditingFood(listing);
-    setFoodForm({
-      food_item: listing.food_item,
-      description: listing.description || '',
-      quantity: listing.quantity,
-      pickup_start_time: new Date(listing.pickup_start_time).toISOString().slice(0, 16),
-      pickup_end_time: new Date(listing.pickup_end_time).toISOString().slice(0, 16),
-      dietary_info: listing.dietary_info || [],
-      image_url: listing.image_url || '',
-    });
-    setShowFoodForm(true);
-  };
-
-
   const handleDeleteFood = async (listingId: string) => {
     console.log('Deleting listing:', listingId);
     const listing = foodListings.find(l => l.id === listingId);
@@ -336,18 +320,12 @@ export default function RestaurantDashboard() {
   };
 
   const handleDietaryInfoChange = (info: string) => {
-    const current = foodForm.dietary_info;
-    if (current.includes(info)) {
-      setFoodForm({
-        ...foodForm,
-        dietary_info: current.filter(item => item !== info)
-      });
-    } else {
-      setFoodForm({
-        ...foodForm,
-        dietary_info: [...current, info]
-      });
-    }
+    setFoodForm(prev => ({
+      ...prev,
+      dietary_info: prev.dietary_info.includes(info)
+        ? prev.dietary_info.filter(item => item !== info)
+        : [...prev.dietary_info, info]
+    }));
   };
 
   // Use demo profile data if available
@@ -484,28 +462,24 @@ export default function RestaurantDashboard() {
               {getProfileImpactStats() && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <StatsCard
-                    label="Meals Shared"
+                    title="Meals Shared"
                     value={getProfileImpactStats()?.meals_shared?.toString() || '0'}
-                    icon={<Users className="w-5 h-5" />}
-                    color="green"
+                    icon={Users}
                   />
                   <StatsCard
-                    label="Waste Prevented"
+                    title="Waste Prevented"
                     value={getProfileImpactStats()?.waste_prevented || '0 kg'}
-                    icon={<TrendingUp className="w-5 h-5" />}
-                    color="blue"
+                    icon={TrendingUp}
                   />
                   <StatsCard
-                    label="People Helped"
+                    title="People Helped"
                     value={getProfileImpactStats()?.community_members_helped?.toString() || '0'}
-                    icon={<Users className="w-5 h-5" />}
-                    color="purple"
+                    icon={Users}
                   />
                   <StatsCard
-                    label="Months Active"
+                    title="Months Active"
                     value={getProfileImpactStats()?.months_active?.toString() || '0'}
-                    icon={<Clock className="w-5 h-5" />}
-                    color="orange"
+                    icon={Clock}
                   />
                 </div>
               )}
@@ -618,7 +592,6 @@ export default function RestaurantDashboard() {
           { id: 'map', label: 'Map View', icon: <MapPin className="w-4 h-4" /> },
           { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> }
         ]}
-        variant="underline"
         className="mb-6"
       />
 
@@ -635,27 +608,24 @@ export default function RestaurantDashboard() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatsCard
-              label="Total Listings"
+              title="Total Listings"
               value={analytics.totalListings.toString()}
-              icon={<Users className="w-5 h-5" />}
-              trend="+12%"
-              color="blue"
+              icon={Users}
+              trend={{ value: 12, isPositive: true }}
             />
 
             <StatsCard
-              label="Active Listings"
+              title="Active Listings"
               value={analytics.activeListing.toString()}
-              icon={<CheckCircle className="w-5 h-5" />}
+              icon={CheckCircle}
               description={`${analytics.wasteReduced}kg waste reduced`}
-              color="green"
             />
 
             <StatsCard
-              label="People Fed"
+              title="People Fed"
               value={analytics.peopleFed.toString()}
-              icon={<Star className="w-5 h-5" />}
+              icon={Star}
               description="Community impact"
-              color="purple"
             />
           </div>
         </div>
@@ -769,7 +739,7 @@ export default function RestaurantDashboard() {
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400">
-                          <XCircle className="w-3 h-3" />
+                          <X className="w-4 h-4" />
                           Pending
                         </span>
                       )}
@@ -795,12 +765,11 @@ export default function RestaurantDashboard() {
                   </p>
                 </div>
                 <ActionButton
+                  icon={Plus}
+                  label="Add Food"
                   onClick={() => setShowFoodForm(true)}
                   variant="primary"
-                  icon={<Plus className="w-4 h-4" />}
-                >
-                  Add Food
-                </ActionButton>
+                />
               </div>
 
               {foodListings.length === 0 ? (
@@ -813,11 +782,11 @@ export default function RestaurantDashboard() {
                     Start sharing your excess food with the community
                   </p>
                   <ActionButton
+                    icon={Plus}
+                    label="Create First Listing"
                     onClick={() => setShowFoodForm(true)}
                     variant="primary"
-                  >
-                    Create First Listing
-                  </ActionButton>
+                  />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 auto-rows-min">
@@ -874,28 +843,35 @@ export default function RestaurantDashboard() {
                       {/* Dietary Info Section */}
                       {listing.dietary_info && listing.dietary_info.length > 0 && (
                         <div>
-                          <BadgeList badges={listing.dietary_info} />
+                          <div className="flex flex-wrap gap-1">
+                            {listing.dietary_info.map((info: string, index: number) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full"
+                              >
+                                {info}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
 
                       {/* Actions Section */}
                       <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                        <ActionButton
-                          onClick={() => handleEditFood(listing)}
-                          variant="outline"
-                          size="sm"
-                          icon={<Edit3 className="w-4 h-4" />}
+                        <button
+                          type="button"
+                          onClick={() => setShowFoodForm(false)}
+                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
-                          Edit
-                        </ActionButton>
+                          Cancel
+                        </button>
                         <ActionButton
+                          icon={Trash2}
+                          label="Delete"
                           onClick={() => handleDeleteFood(listing.id)}
-                          variant="outline"
+                          variant="danger"
                           size="sm"
-                          icon={<Trash2 className="w-4 h-4" />}
-                        >
-                          Delete
-                        </ActionButton>
+                        />
                       </div>
                     </div>
                   ))}
@@ -1029,21 +1005,19 @@ export default function RestaurantDashboard() {
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <ActionButton
+                  <button
                     type="button"
                     onClick={() => setShowRestaurantForm(false)}
-                    variant="outline"
-                    className="flex-1"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     Cancel
-                  </ActionButton>
-                  <ActionButton
+                  </button>
+                  <button
                     type="submit"
-                    variant="primary"
-                    className="flex-1"
+                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
                   >
                     Create Restaurant
-                  </ActionButton>
+                  </button>
                 </div>
               </form>
             </div>
@@ -1151,16 +1125,17 @@ export default function RestaurantDashboard() {
                     {foodForm.dietary_info.length > 0 && (
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Selected:</p>
-                        <BadgeList
-                          badges={foodForm.dietary_info}
-                          onRemove={(badge) => {
-                            if (typeof badge === 'string') {
-                              handleDietaryInfoChange(badge);
-                            } else {
-                              handleDietaryInfoChange(badge.label);
-                            }
-                          }}
-                        />
+                        <div className="flex flex-wrap gap-1">
+                          {foodForm.dietary_info.map((info: string, index: number) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800/50"
+                              onClick={() => handleDietaryInfoChange(info)}
+                            >
+                              {info} ×
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1180,7 +1155,7 @@ export default function RestaurantDashboard() {
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <ActionButton
+                  <button
                     type="button"
                     onClick={() => {
                       setShowFoodForm(false);
@@ -1195,18 +1170,16 @@ export default function RestaurantDashboard() {
                         image_url: '',
                       });
                     }}
-                    variant="outline"
-                    className="flex-1"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     Cancel
-                  </ActionButton>
-                  <ActionButton
+                  </button>
+                  <button
                     type="submit"
-                    variant="primary"
-                    className="flex-1"
+                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
                   >
-                    {editingFood ? 'Update Listing' : 'Create Listing'}
-                  </ActionButton>
+                    {editingFood ? 'Update Food Listing' : 'Create Food Listing'}
+                  </button>
                 </div>
               </form>
             </div>
@@ -1238,7 +1211,7 @@ export default function RestaurantDashboard() {
         onConfirm={confirmDeleteFood}
         title="Delete Food Listing"
         message={`Are you sure you want to delete "${deleteDialog.foodName}"? This action cannot be undone.`}
-        type="danger"
+        variant="danger"
       />
     </div>
   );
