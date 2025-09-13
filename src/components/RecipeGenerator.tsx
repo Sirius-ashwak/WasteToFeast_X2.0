@@ -7,8 +7,8 @@ import { ChefHat, Clock, ArrowRight, Check, X, Utensils, Users, Timer, CircleDas
 import { useStore } from '../store';
 import { StarIcon } from '@heroicons/react/24/solid';
 import VideoCard from './VideoCard';
-// import LanguageSelector from './LanguageSelector';
-// import { HuggingFaceTranslationService } from '../services/translationService';
+import LanguageSelector from './LanguageSelector';
+import { translationService } from '../services/translationService';
 
 interface Props {
   ingredients?: string[];
@@ -35,10 +35,9 @@ export default function RecipeGenerator({ ingredients = [] }: Props) {
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
-  // const [translationService] = useState(() => new HuggingFaceTranslationService());
-  // const [selectedLanguage, setSelectedLanguage] = useState('en');
-  // const [isTranslating, setIsTranslating] = useState(false);
-  // const [translatedRecipe, setTranslatedRecipe] = useState<ParsedRecipe | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translatedRecipe, setTranslatedRecipe] = useState<ParsedRecipe | null>(null);
   const { currentAnalysis, setCurrentAnalysis, addMealToHistory } = useStore();
 
   // Update selected ingredients when currentAnalysis changes
@@ -158,12 +157,56 @@ export default function RecipeGenerator({ ingredients = [] }: Props) {
     setParsedRecipe(parseRecipeText(recipe));
   }, [recipe]);
 
-  // Translation functionality - TEMPORARILY DISABLED
-  // const handleLanguageChange = async (languageCode: string) => { ... };
+  // Translation functionality
+  const handleLanguageChange = async (languageCode: string) => {
+    if (languageCode === selectedLanguage) return;
+    
+    setSelectedLanguage(languageCode);
+    
+    if (languageCode === 'en') {
+      setTranslatedRecipe(null);
+      return;
+    }
+    
+    if (!parsedRecipe) return;
+    
+    setIsTranslating(true);
+    try {
+      const translatedName = await translationService.translateText(parsedRecipe.name, languageCode);
+      const translatedIngredients = await Promise.all(
+        parsedRecipe.ingredients.map(ingredient => 
+          translationService.translateText(ingredient, languageCode)
+        )
+      );
+      const translatedInstructions = await Promise.all(
+        parsedRecipe.instructions.map(instruction => 
+          translationService.translateText(instruction, languageCode)
+        )
+      );
+      const translatedTips = await Promise.all(
+        parsedRecipe.tips.map(tip => 
+          translationService.translateText(tip, languageCode)
+        )
+      );
+      
+      setTranslatedRecipe({
+        ...parsedRecipe,
+        name: translatedName,
+        ingredients: translatedIngredients,
+        instructions: translatedInstructions,
+        tips: translatedTips
+      });
+    } catch (error) {
+      console.error('Translation error:', error);
+      toast.error('Translation failed. Please try again.');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
-  // Get current recipe to display - TEMPORARILY DISABLED
+  // Get current recipe to display
   const getCurrentRecipe = () => {
-    return parsedRecipe;
+    return selectedLanguage === 'en' ? parsedRecipe : (translatedRecipe || parsedRecipe);
   };
 
   const toggleIngredient = (ingredient: string) => {
@@ -397,15 +440,15 @@ export default function RecipeGenerator({ ingredients = [] }: Props) {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold dark:text-white">Custom Recipe Generator</h2>
             
-            {/* Language Selector - TEMPORARILY DISABLED */}
-            {/* {parsedRecipe && translationService.isAvailable() && (
+            {/* Language Selector */}
+            {parsedRecipe && translationService.isAvailable() && (
               <LanguageSelector
                 currentLanguage={selectedLanguage}
                 onLanguageChange={handleLanguageChange}
                 disabled={isTranslating}
                 className="flex-shrink-0"
               />
-            )} */}
+            )}
           
             {/* Star Rating */}
             {recipe && (
@@ -479,15 +522,15 @@ export default function RecipeGenerator({ ingredients = [] }: Props) {
               animate={{ opacity: 1, y: 0 }}
               className="mt-6"
             >
-              {/* Translation Loading - TEMPORARILY DISABLED */}
-              {/* {isTranslating && (
+              {/* Translation Loading */}
+              {isTranslating && (
                 <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
                     <span className="text-blue-700 dark:text-blue-300 text-sm font-medium">Translating recipe...</span>
                   </div>
                 </div>
-              )} */}
+              )}
               
               <div className="bg-white rounded-xl shadow-md overflow-hidden dark:bg-gray-800 border border-gray-100 dark:border-gray-700 transition-colors duration-200">
                 {/* Recipe Header */}
