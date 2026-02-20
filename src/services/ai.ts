@@ -116,28 +116,53 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
     }
 
     // Parse the response with improved error handling
-    const ingredientsMatch = text.match(/ingredients:(.*?)(\n|$)/i);
-    const suggestionsMatch = text.match(/suggestions:(.*?)(\n|$)/i);
+    // Handle both comma-separated and list formats, with or without markdown
+    let ingredients: string[] = [];
+    let suggestions: string[] = [];
 
-    if (!ingredientsMatch) {
+    const ingredientsSection = text.match(/ingredients:?\s*\*?\*?\s*([\s\S]*?)(?=suggestions:|$)/i);
+    if (ingredientsSection && ingredientsSection[1]) {
+      const rawIngredients = ingredientsSection[1].trim();
+      if (rawIngredients.includes('\n')) {
+        // List format
+        ingredients = rawIngredients
+          .split('\n')
+          .map(i => i.replace(/^[-*•\d+\.]\s*/, '').trim())
+          .filter(Boolean);
+      } else {
+        // Comma-separated format
+        ingredients = rawIngredients
+          .split(',')
+          .map(i => i.trim())
+          .filter(Boolean);
+      }
+    }
+
+    const suggestionsSection = text.match(/suggestions:?\s*\*?\*?\s*([\s\S]*?)(?=$)/i);
+    if (suggestionsSection && suggestionsSection[1]) {
+      const rawSuggestions = suggestionsSection[1].trim();
+      if (rawSuggestions.includes('\n')) {
+        // List format
+        suggestions = rawSuggestions
+          .split('\n')
+          .map(s => s.replace(/^[-*•\d+\.]\s*/, '').trim())
+          .filter(Boolean);
+      } else {
+        // Comma-separated format
+        suggestions = rawSuggestions
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
+      }
+    }
+
+    if (ingredients.length === 0) {
       console.warn('Non-standard response format:', text);
       throw new Error('Invalid response format: ingredients not found');
     }
 
-    const ingredients = ingredientsMatch[1]
-      .split(',')
-      .map(i => i.trim())
-      .filter(Boolean);
-
-    const suggestions = suggestionsMatch ? 
-      suggestionsMatch[1]
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean) :
-      ['Simple stir-fry', 'Basic salad', 'Quick soup', 'One-pot meal'];
-
-    if (ingredients.length === 0) {
-      throw new Error('No food ingredients detected. Please upload a clearer image of food items.');
+    if (suggestions.length === 0) {
+      suggestions = ['Simple stir-fry', 'Basic salad', 'Quick soup', 'One-pot meal'];
     }
 
     return {

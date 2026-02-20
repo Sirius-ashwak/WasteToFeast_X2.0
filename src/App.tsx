@@ -32,15 +32,6 @@ function App() {
       });
     }
     
-    // Check Supabase configuration
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-      console.error('Supabase configuration is missing');
-      toast.error('Database configuration is missing. Please check your .env file.', {
-        duration: 5000,
-        id: 'supabase-missing'
-      });
-    }
-    
     // Initialize sample data if no meal history exists
     if (mealHistory.length === 0) {
       initializeSampleData();
@@ -145,14 +136,11 @@ function App() {
         );
         
       case 'food-map':
-        if (isAuthenticated && initialized) {
-          if (isRestaurantAdmin) {
-            return <RestaurantDashboard />;
-          } else {
-            return <UserDashboard />;
-          }
+        if (isRestaurantAdmin) {
+          return <RestaurantDashboard />;
+        } else if (isAuthenticated) {
+          return <UserDashboard />;
         } else {
-          // Guest view-only food map
           return (
             <div className="space-y-8">
               <div className="text-center">
@@ -162,13 +150,7 @@ function App() {
                 <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-4">
                   Discover available food near you in real-time
                 </p>
-                <div className="bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 max-w-2xl mx-auto">
-                  <p className="text-yellow-800 dark:text-yellow-200">
-                    Sign in to claim food and access full features
-                  </p>
-                </div>
               </div>
-              
               <div className="max-w-6xl mx-auto">
                 <FoodSharingSection />
               </div>

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { analyzeImage } from '../services/ai';
 import type { AIAnalysisResult } from '../types';
-import { Upload, Camera, ImageIcon, Check, RefreshCcw, ArrowRight } from 'lucide-react';
+import { Upload, Camera, ImageIcon, Check, RefreshCcw, ArrowRight, RotateCcw } from 'lucide-react';
 
 interface Props {
   onAnalysisComplete: (result: AIAnalysisResult) => void;
@@ -14,50 +14,56 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<AIAnalysisResult | null>(null);
+  const lastFileRef = useRef<File | null>(null);
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
-      return;
-    }
-
-    // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error('Image size must be less than 5MB');
-      return;
-    }
+  const runAnalysis = async (file: File) => {
     setLoading(true);
     setError(null);
     setResults(null);
 
     try {
-      // Create preview
-      const previewUrl = URL.createObjectURL(file);
-      setPreview(previewUrl);
-
       const result = await analyzeImage(file);
       setResults(result);
       onAnalysisComplete(result);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to analyze image';
       setError(errorMessage);
-      
-      // Show different toast messages based on error type
+
       if (errorMessage.includes('busy') || errorMessage.includes('overloaded')) {
-        toast.error('AI service is busy - trying again automatically...', {
-          duration: 4000,
-        });
+        toast.error('AI service is busy - trying again automatically...', { duration: 4000 });
       } else {
         toast.error(errorMessage);
       }
-      setPreview(null);
+      // NOTE: preview is intentionally kept so the user can see what they uploaded
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    lastFileRef.current = file;
+    const previewUrl = URL.createObjectURL(file);
+    setPreview(previewUrl);
+    await runAnalysis(file);
+  };
+
+  const handleRetry = async () => {
+    if (lastFileRef.current) {
+      await runAnalysis(lastFileRef.current);
     }
   };
 
@@ -114,6 +120,14 @@ const ImageUploader: React.FC<Props> = ({ onAnalysisComplete }) => {
           {error && (
             <div className="p-4 bg-red-50 text-red-600 rounded-lg dark:bg-red-900/30 dark:text-red-100 dark:border dark:border-red-800">
               <p className="font-medium">Error: {error}</p>
+              <button
+                onClick={handleRetry}
+                disabled={loading}
+                className="mt-2 flex items-center gap-2 px-3 py-1.5 bg-red-100 hover:bg-red-200 dark:bg-red-800 dark:hover:bg-red-700 text-red-700 dark:text-red-100 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Retry Analysis
+              </button>
             </div>
           )}
         </div>
