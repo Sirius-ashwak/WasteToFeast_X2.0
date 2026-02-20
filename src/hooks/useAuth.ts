@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseAvailable } from '../lib/supabase';
 import type { Database } from '../types/database';
 
 type UserProfile = Database['public']['Tables']['users']['Row'];
@@ -17,6 +17,16 @@ export function useAuth() {
     let mounted = true;
     
     const initializeAuth = async () => {
+      // If Supabase is not configured, skip auth entirely
+      if (!supabaseAvailable) {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        setInitialized(true);
+        return;
+      }
+
       try {
         console.log('Starting auth initialization...');
         // Get initial session
@@ -98,7 +108,14 @@ export function useAuth() {
     
     initializeAuth();
 
-    // Listen for auth changes
+    // Listen for auth changes (only if Supabase is available)
+    if (!supabaseAvailable) {
+      return () => {
+        mounted = false;
+        clearTimeout(initTimeout);
+      };
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {

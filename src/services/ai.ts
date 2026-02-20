@@ -6,9 +6,9 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Retry configuration
 const RETRY_CONFIG = {
-  maxRetries: 5, // Increased from 3 to 5 for 503 errors
-  baseDelay: 3000, // Increased from 2000 to 3000ms (3 seconds)
-  maxDelay: 20000, // Increased from 10000 to 20000ms (20 seconds)
+  maxRetries: 5,
+  baseDelay: 5000, // 5 seconds base delay for rate limits
+  maxDelay: 60000, // 60 seconds max delay
 };
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -28,17 +28,22 @@ async function retryWithBackoff<T>(
   try {
     return await fn();
   } catch (error: any) {
-    const isRetryableError = error?.message?.includes('overloaded') || 
-                           error?.message?.includes('503') ||
-                           error?.message?.includes('rate limit') ||
-                           error?.message?.includes('429');
-    
+    const msg = error?.message || '';
+    const isRetryableError =
+      msg.includes('overloaded') ||
+      msg.includes('503') ||
+      msg.includes('rate limit') ||
+      msg.includes('429') ||
+      msg.includes('RESOURCE_EXHAUSTED') ||
+      msg.includes('quota exceeded') ||
+      msg.includes('Too Many Requests');
+
     if (retries > 0 && isRetryableError) {
       const delay = Math.min(
         RETRY_CONFIG.baseDelay * (RETRY_CONFIG.maxRetries - retries + 1),
         RETRY_CONFIG.maxDelay
       );
-      console.log(`API ${error?.message?.includes('503') ? 'overloaded' : 'rate limited'}, retrying in ${delay}ms... (${retries} retries left)`);
+      console.log(`API rate limited / overloaded, retrying in ${delay}ms... (${retries} retries left)`);
       await wait(delay);
       return retryWithBackoff(fn, retries - 1);
     }
@@ -75,8 +80,8 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
       reader.readAsDataURL(imageFile);
     });
 
-    // Initialize Gemini model - Using 1.5-flash for better analysis
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Initialize Gemini model - Using 2.0-flash for better analysis
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     // Enhanced prompt for better ingredient detection
     const prompt = `
@@ -91,23 +96,20 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
       suggestions: recipe1, recipe2, recipe3, recipe4, recipe5
     `;
 
-    // Use the updated API structure
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          mimeType: imageFile.type,
-          data: base64Image
+    // Wrap the full generateContent call in retryWithBackoff so rate-limit errors are retried
+    const text = await retryWithBackoff(async () => {
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            mimeType: imageFile.type,
+            data: base64Image
+          }
         }
-      }
-    ]);
-
-    const analysisFunction = async () => {
+      ]);
       const response = await result.response;
       return response.text();
-    };
-
-    const text = await retryWithBackoff(analysisFunction);
+    });
 
     if (!text) {
       throw new Error('No analysis results received');
@@ -155,11 +157,16 @@ export async function analyzeImage(imageFile: File): Promise<AIAnalysisResult> {
       if (error.message.includes('overloaded') || error.message.includes('503')) {
         throw new Error('Google\'s AI service is currently overloaded due to high demand. The app will automatically retry, or you can try again in 10-15 minutes.');
       }
-      if (error.message.includes('rate limit') || error.message.includes('429')) {
-        throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+      if (
+        error.message.includes('rate limit') ||
+        error.message.includes('429') ||
+        error.message.includes('RESOURCE_EXHAUSTED') ||
+        error.message.includes('Too Many Requests')
+      ) {
+        throw new Error('Rate limit exceeded. The free Gemini API allows 15 requests/minute. Please wait 1 minute and try again.');
       }
       if (error.message.includes('quota')) {
-        throw new Error('API quota exceeded. Please try again later or contact support.');
+        throw new Error('Daily API quota exceeded. Please try again tomorrow or upgrade your Gemini API plan.');
       }
       if (error.message.includes('API key')) {
         throw new Error('AI service configuration issue. Please check the API key settings.');
@@ -197,7 +204,7 @@ export async function generateRecipe(ingredients: string[]): Promise<string> {
     });
 
     // Use the more capable model for recipe generation
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
     // Create a more targeted prompt based on whether a specific dish was requested
     const prompt = specificDish 
@@ -279,8 +286,16 @@ export async function generateRecipe(ingredients: string[]): Promise<string> {
   } catch (error) {
     console.error('Recipe generation error:', error);
     if (error instanceof Error) {
-      if (error.message.includes('overloaded')) {
+      if (error.message.includes('overloaded') || error.message.includes('503')) {
         throw new Error('The AI service is currently busy. Please try again in a few moments.');
+      }
+      if (
+        error.message.includes('RESOURCE_EXHAUSTED') ||
+        error.message.includes('429') ||
+        error.message.includes('rate limit') ||
+        error.message.includes('Too Many Requests')
+      ) {
+        throw new Error('Rate limit exceeded. The free Gemini API allows 15 requests/minute. Please wait 1 minute and try again.');
       }
       throw new Error(`Failed to generate recipe: ${error.message}`);
     }
